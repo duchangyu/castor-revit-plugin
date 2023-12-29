@@ -1,0 +1,21 @@
+﻿<Window
+    x:Class="CastorPlugin.Views.CastorPluginView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:viewModel="clr-namespace:CastorPlugin.ViewModels"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance viewModel:CastorPluginViewModel}"
+    WindowStartupLocation="CenterScreen"
+    Title="CastorPlugin"
+    Height="450"
+    Width="800">
+    <Grid>
+        <TextBlock
+            Text="CastorPlugin"
+            FontSize="60"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center" />
+    </Grid>
+</Window>
