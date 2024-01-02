@@ -53,10 +53,11 @@
     <PropertyGroup>
         <StartAction>Program</StartAction>
         <StartProgram>C:\Program Files\Autodesk\Revit $(RevitVersion)\Revit.exe</StartProgram>
-        <StartArguments>/language ENG</StartArguments>
+        <StartArguments>/language CHS</StartArguments>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2210.55" />
         <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*" />
         <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitVersion).*-*" />
@@ -96,12 +97,19 @@
         <Copy SourceFiles="@(RootItem)" DestinationFolder="$(RootDir)" />
         <Copy SourceFiles="@(AddinItem)" DestinationFolder="$(AddinDir)" />
 
-        <ItemGroup>
+		<!--复制webview2 所需要的rumtimes 文件，需要保留原有文件结构-->
+		<ItemGroup>
+			<RuntimesFiles Include="$(OutputPath)/runtimes/**/*.*" />
+		</ItemGroup>
+
+		<Copy SourceFiles="@(RuntimesFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)\runtimes\%(RecursiveDir)" />
+
+		
+		<ItemGroup>
             <AddinFiles Include="$(RootDir)**\*.*" />
         </ItemGroup>
 
-        <Copy SourceFiles="@(AddinFiles)"
-              DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\%(RecursiveDir)" />
+        <Copy SourceFiles="@(AddinFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\%(RecursiveDir)" />
     </Target>
 
     <Target Name="DeleteFiles" AfterTargets="Clean">

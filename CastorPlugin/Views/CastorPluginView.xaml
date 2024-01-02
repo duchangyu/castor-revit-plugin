@@ -5,17 +5,25 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:viewModel="clr-namespace:CastorPlugin.ViewModels"
-    mc:Ignorable="d"
+   xmlns:webview2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"  mc:Ignorable="d"
     d:DataContext="{d:DesignInstance viewModel:CastorPluginViewModel}"
     WindowStartupLocation="CenterScreen"
     Title="CastorPlugin"
     Height="450"
     Width="800">
-    <Grid>
-        <TextBlock
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="150px"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+    <!--<TextBlock
             Text="CastorPlugin"
             FontSize="60"
             VerticalAlignment="Center"
-            HorizontalAlignment="Center" />
-    </Grid>
+            HorizontalAlignment="Left" Grid.ColumnSpan="2" Margin="217,0,0,0" />-->
+
+    <webview2:WebView2 Grid.Column="1" Name = "webView" MinHeight="300" MinWidth="450" Height="NaN"
+                        Source = "https://www.microsoft.com" DockPanel.Dock="Top" />
+
+  </Grid>
 </Window>
