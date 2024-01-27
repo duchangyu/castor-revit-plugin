@@ -21,9 +21,11 @@
             FontSize="60"
             VerticalAlignment="Center"
             HorizontalAlignment="Left" Grid.ColumnSpan="2" Margin="217,0,0,0" />-->
+    <Button Grid.Column="0" Content="test" Click="Button_Click" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
 
     <webview2:WebView2 Grid.Column="1" Name = "webView" MinHeight="300" MinWidth="450" Height="NaN"
                         Source = "https://www.microsoft.com" DockPanel.Dock="Top" />
-
+  
   </Grid>
 </Window>

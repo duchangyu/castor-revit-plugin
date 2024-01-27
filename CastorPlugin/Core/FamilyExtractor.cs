@@ -1,0 +1,317 @@
+﻿
+using Autodesk.Revit.DB;
+using CastorPlugin.Utils;
+using Newtonsoft.Json;
+using Nice3point.Revit.Extensions;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using static System.Net.Mime.MediaTypeNames;
+
+namespace CastorPlugin.Core
+{
+    internal class FamilyExtractor
+    {
+
+        private readonly Document _document;
+
+        public FamilyExtractor(Document document)
+        {
+            _document = document;
+        }
+
+        public void ExtractFamilies()
+        {
+            FilteredElementCollector collector = new FilteredElementCollector(_document).OfClass(typeof(Family));
+            // List<FamilyInstance> list = collector.ToList<FamilyInstance>();
+            //int count = list.Count, exported = 0;
+
+            foreach (Family family in collector)
+            {
+
+                if (family.IsEditable)
+                {
+                   
+                    string str = GetFamilyFingerprintInJson(family);
+
+                    Log.Information(str);
+
+                    //TODO: convert fingerprint json to MD5 or sha256 hash code
+
+                    //TODO: post to server, and register as occupoied.
+        
+
+                }
+
+            }
+        }
+
+        private void ExtractFamilyPreviewThumbnail(Family family, string familyPath)
+        {
+            ElementType elemType = _document.GetElement(family.GetTypeId()) as ElementType;
+
+            System.Drawing.Size size = new System.Drawing.Size(200, 200);
+
+            Bitmap image = elemType.GetPreviewImage(size);
+
+            // encode image to jpeg for test display purposes:
+
+            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+
+            encoder.Frames.Add(BitmapFrame.Create(
+                ConvertBitmapToBitmapSource(image))
+                );
+
+            encoder.QualityLevel = 25;
+
+            string familyPreviewFilename = familyPath.Replace(".rfa", ".jpg");
+            FileStream file = new FileStream(familyPreviewFilename, FileMode.Create, FileAccess.Write);
+
+            encoder.Save(file);
+            file.Close();
+
+            Process.Start(familyPreviewFilename); // test display
+        }
+
+        private string GetFamilyFingerprintInJson(Family family)
+        {
+            string familyFingerprintInJson = String.Empty;
+
+            // Create a temporary folder within the current assembly directory
+            string tempFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "TempFolder");
+
+            // Create the folder if it doesn't exist
+            if (!Directory.Exists(tempFolder))
+            {
+                Directory.CreateDirectory(tempFolder);
+            }
+
+
+            string outputPath = Path.Combine(tempFolder, $"{family.Name}.rfa");
+
+            Dictionary<string, object> familyFingerPrintDict = new Dictionary<string, object>();
+          
+            // Create a new document
+            Document familyDocument = _document.EditFamily(family);
+
+            // make sure it's a real family document
+            if (familyDocument.IsFamilyDocument)
+            {
+
+          
+                familyFingerPrintDict =  ExtractFamilyParameters(familyDocument);
+
+                //convert to json string
+                familyFingerprintInJson = JsonConvert.SerializeObject(familyFingerPrintDict);
+                Debug.Print(familyFingerprintInJson);
+
+
+                //write to file for debug
+                string filePath = Path.Combine(tempFolder, $"{family.Name}.json");
+                using (StreamWriter writer = new StreamWriter(filePath))
+                {
+                    writer.WriteLine(familyFingerprintInJson);
+                }
+
+
+
+
+
+                //// Save the family to a temporary file
+                //SaveAsOptions options = new SaveAsOptions();
+                //options.OverwriteExistingFile = true;
+                //familyDocument.SaveAs(outputPath, options);
+
+
+            }
+
+            // Close the family document
+            familyDocument.Close(false);
+
+            return familyFingerprintInJson;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="familyDocument"></param>
+        /// <returns></returns>
+        private Dictionary<string, object> ExtractFamilyParameters(Document familyDocument )
+        {
+            //https://thebuildingcoder.typepad.com/blog/2009/11/family-parameter-value.html
+
+            //init the  basic structure of dictionary 
+            var familyFingerPrintDict = Util.CreateNestedDictionary(
+                    "Asset",
+                    new (string Key, object Value)[]
+                    {
+                        ("AssetType","RevitFamily"),
+                        ("AssetName", familyDocument.Title)
+                        //("v1", new (string Key, object Value)[]
+                        //{
+                        //    ("Description","Version 1.0 of family finger print")
+                        //})
+                    }
+           
+                );
+
+
+
+            FamilyManager mgr = familyDocument.FamilyManager;
+            int n = mgr.Parameters.Size;
+            Debug.Print( "\nFamily {0} has {1} parameter.", familyDocument.Title, n);
+
+            // store the parameter name and param itself into a dict
+            Dictionary<string, FamilyParameter> fps = new Dictionary<string, FamilyParameter>(n);
+            foreach (FamilyParameter fp in mgr.Parameters)
+            {
+                string name = fp.Definition.Name;
+                if (!fps.ContainsKey(name))
+                {
+                    fps.Add(name, fp);
+                }
+                
+            }
+            List<string> keys = new List<string>(fps.Keys);
+            keys.Sort();
+
+
+            n = mgr.Types.Size;
+
+            Debug.Print( "Family {0} has {1} type", familyDocument.Title, n);
+
+            foreach (FamilyType t in mgr.Types)
+            {
+                string typeName = t.Name;
+
+                Debug.Print("  {0}:", typeName);
+                foreach (string key in keys)
+                {
+                    FamilyParameter fp = fps[key];
+                    if (t.HasValue(fp))
+                    {
+                        string value
+                          = FamilyParamValueString(t, fp, familyDocument);
+
+                        Debug.Print("    {0} = {1}", key, value);
+
+                        //add to the nested dict
+                        Util.AddToNestedDictionary(familyFingerPrintDict, "Asset.v1."+ typeName + "." + key, value);
+
+                    }
+                }
+            }
+
+
+ 
+
+
+     
+            return familyFingerPrintDict;
+
+
+        }
+
+
+        private static string FamilyParamValueString(
+              FamilyType t,
+              FamilyParameter fp,
+              Document doc)
+        {
+            string value = t.AsValueString(fp);
+            switch (fp.StorageType)
+            {
+                case StorageType.Double:
+                    value = RealString(
+                      (double)t.AsDouble(fp))
+                      + " (double)";
+                    break;
+
+                case StorageType.ElementId:
+                    ElementId id = t.AsElementId(fp);
+                    Element e = doc.GetElement( id);
+                    value = id.ToString() + " ("
+                      + ElementDescription(e) + ")";
+                    break;
+
+                case StorageType.Integer:
+                    value = t.AsInteger(fp).ToString()
+                      + " (int)";
+                    break;
+
+                case StorageType.String:
+                    value = "'" + t.AsString(fp)
+                      + "' (string)";
+                    break;
+            }
+            return value;
+        }
+
+
+        // 创建嵌套字典的辅助方法
+        private static Dictionary<string, object> CreateNestedDictionary(
+                string key, 
+                params (string Key, object Value)[] keyValuePairs
+            )
+        {
+            var dictionary = new Dictionary<string, object>();
+            foreach (var (Key, Value) in keyValuePairs)
+            {
+                if (Value is (string, object)[] nestedKeyValuePairs)
+                {
+                    // 递归创建嵌套字典
+                    dictionary[Key] = CreateNestedDictionary(Key, nestedKeyValuePairs);
+                }
+                else
+                {
+                    // 添加键值对到当前字典
+                    dictionary[Key] = Value;
+                }
+            }
+            return dictionary;
+        }
+    
+
+    private static BitmapSource ConvertBitmapToBitmapSource(Bitmap bmp)
+        {
+            return System.Windows.Interop.Imaging
+              .CreateBitmapSourceFromHBitmap(
+                bmp.GetHbitmap(),
+                IntPtr.Zero,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+        }
+
+        private static string ElementDescription(Element e)
+        {
+            if (null == e)
+            {
+                return "<null>";
+            }
+            // for a wall, the element name equals the
+            // wall type name, which is equivalent to the
+            // family name ...
+            FamilyInstance fi = e as FamilyInstance;
+            string fn = (null == fi)
+              ? string.Empty
+              : fi.Symbol.Family.Name + " ";
+
+            string cn = (null == e.Category)
+              ? e.GetType().Name
+              : e.Category.Name;
+
+            return string.Format("{0} {1}<{2} {3}>",
+              cn, fn, e.Id.ToString(), e.Name);
+        }
+
+        private static string RealString(double a)
+        {
+            return a.ToString("0.##");
+        }
+
+    }
+}

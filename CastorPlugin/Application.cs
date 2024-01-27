@@ -1,4 +1,5 @@
 ﻿using CastorPlugin.Commands;
+using CastorPlugin.Core;
 using Nice3point.Revit.Toolkit.External;
 using Serilog.Events;
 
@@ -9,6 +10,8 @@ namespace CastorPlugin
     {
         public override void OnStartup()
         {
+            // binding revit application
+            RevitApi.UiApplication = UiApplication;
             CreateLogger();
             CreateRibbon();
         }

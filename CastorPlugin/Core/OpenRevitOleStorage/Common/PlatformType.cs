@@ -1,0 +1,10 @@
+﻿namespace CastorPlugin.Core.OpenRevitOleStorage.Common
+{
+    /// <summary>An enumerate to list Revit Platform Type. </summary>
+    public enum PlatformType
+    {
+        x86,
+        x64,
+        Unknown
+    }
+}

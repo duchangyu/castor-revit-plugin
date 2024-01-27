@@ -1,5 +1,8 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using CastorPlugin.Core.OpenRevitOleStorage;
+using System.IO;
+using Document = Autodesk.Revit.DB.Document;
 
 namespace CastorPlugin.Core
 {
@@ -17,5 +20,25 @@ namespace CastorPlugin.Core
             get => UiDocument.ActiveView;
             set => UiDocument.ActiveView = value;
         }
+
+
+
+        public static void ScanFamilies()
+        {
+           
+
+            // Create an instance of FamilyExtractor
+            FamilyExtractor familyExtractor = new FamilyExtractor(Document);
+
+            // Extract families to the temporary folder
+            familyExtractor.ExtractFamilies();
+
+            //string basicInfo =  Tool.GetBasicInformation(tempFolder);
+            //string imgbase64 = Tool.GetFamilyPreviewThumbnail(tempFolder);
+
+            TaskDialog.Show("Success", "Families in project are scanned and ready to accupy~~");
+     
+        }
     }
+    
 }

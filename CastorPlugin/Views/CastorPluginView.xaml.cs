@@ -1,4 +1,5 @@
-﻿using CastorPlugin.ViewModels;
+﻿using CastorPlugin.Core;
+using CastorPlugin.ViewModels;
 
 namespace CastorPlugin.Views
 {
@@ -8,6 +9,12 @@ namespace CastorPlugin.Views
         {
             InitializeComponent();
             DataContext = viewModel;
+        }
+
+        private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            RevitApi.ScanFamilies();
+
         }
     }
 }
