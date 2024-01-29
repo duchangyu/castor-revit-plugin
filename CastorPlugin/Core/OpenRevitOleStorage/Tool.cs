@@ -72,7 +72,7 @@ namespace CastorPlugin.Core.OpenRevitOleStorage
             return basicInfo;
         }
 
-        private static string ImageToBase64(Image image)
+        public static string ImageToBase64(Image image)
         {
             using (MemoryStream memoryStream = new MemoryStream())
             {

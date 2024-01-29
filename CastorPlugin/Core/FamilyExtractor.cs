@@ -30,51 +30,102 @@ namespace CastorPlugin.Core
             // List<FamilyInstance> list = collector.ToList<FamilyInstance>();
             //int count = list.Count, exported = 0;
 
-            foreach (Family family in collector)
+
+            // 获取族类型
+            FilteredElementCollector familySymbolCollector = new FilteredElementCollector(_document)
+                .OfClass(typeof(FamilySymbol));
+
+            foreach (FamilySymbol familySymbol in familySymbolCollector)
             {
-
-                if (family.IsEditable)
+                if(familySymbol != null)
                 {
-                   
-                    string str = GetFamilyFingerprintInJson(family);
+                    // 获取族预览图片
+                    ExtractFamilySymbolPreviewThumbnail(familySymbol);
 
-                    Log.Information(str);
 
-                    //TODO: convert fingerprint json to MD5 or sha256 hash code
+                    // 通过FamilySymbol获取Family对象
+                    Family family = familySymbol.Family;
+                    if (family != null)
+                    {
+                        // 现在我们可以使用family对象了
+                        // ... 进行操作 ...
+                        string str = GetFamilyFingerprintInJson(family);
 
-                    //TODO: post to server, and register as occupoied.
-        
+
+                    }
 
                 }
-
             }
+
+
+
+
+            //foreach (Family family in collector)
+            //{
+
+            //    if (family.IsEditable)
+            //    {
+                   
+            //        string str = GetFamilyFingerprintInJson(family);
+
+            //        Log.Information(str);
+
+            //        //TODO: convert fingerprint json to MD5 or sha256 hash code
+
+            //        //TODO: post to server, and register as occupoied.
+        
+
+            //    }
+
+            //}
+
+
         }
 
-        private void ExtractFamilyPreviewThumbnail(Family family, string familyPath)
+        private void ExtractFamilySymbolPreviewThumbnail(FamilySymbol familySymbol)
         {
-            ElementType elemType = _document.GetElement(family.GetTypeId()) as ElementType;
-
+    
             System.Drawing.Size size = new System.Drawing.Size(200, 200);
 
-            Bitmap image = elemType.GetPreviewImage(size);
+            Bitmap image = familySymbol.GetPreviewImage(size);
 
-            // encode image to jpeg for test display purposes:
+            if(image != null)
+            {
 
-            JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                OpenRevitOleStorage.Tool.ImageToBase64(image);
 
-            encoder.Frames.Add(BitmapFrame.Create(
-                ConvertBitmapToBitmapSource(image))
-                );
+                // encode image to jpeg for test display purposes:
 
-            encoder.QualityLevel = 25;
+                JpegBitmapEncoder encoder = new JpegBitmapEncoder();
 
-            string familyPreviewFilename = familyPath.Replace(".rfa", ".jpg");
-            FileStream file = new FileStream(familyPreviewFilename, FileMode.Create, FileAccess.Write);
+                encoder.Frames.Add(BitmapFrame.Create(
+                    ConvertBitmapToBitmapSource(image))
+                    );
 
-            encoder.Save(file);
-            file.Close();
+                encoder.QualityLevel = 25;
 
-            Process.Start(familyPreviewFilename); // test display
+                // for debug, save to file and open it 
+                // Create a temporary folder within the current assembly directory
+                string tempFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "TempFolder");
+
+                // Create the folder if it doesn't exist
+                if (!Directory.Exists(tempFolder))
+                {
+                    Directory.CreateDirectory(tempFolder);
+                }
+
+
+                string familyPreviewFilename = Path.Combine(tempFolder, $"{familySymbol.Name.Replace("/","")}.jpg");
+
+                FileStream file = new FileStream(familyPreviewFilename, FileMode.Create, FileAccess.Write);
+
+                encoder.Save(file);
+                file.Close();
+
+                Process.Start(familyPreviewFilename); // test display
+
+            }
+           
         }
 
         private string GetFamilyFingerprintInJson(Family family)
@@ -94,43 +145,51 @@ namespace CastorPlugin.Core
             string outputPath = Path.Combine(tempFolder, $"{family.Name}.rfa");
 
             Dictionary<string, object> familyFingerPrintDict = new Dictionary<string, object>();
-          
-            // Create a new document
-            Document familyDocument = _document.EditFamily(family);
 
-            // make sure it's a real family document
-            if (familyDocument.IsFamilyDocument)
+
+            if (family.IsEditable)
             {
 
-          
-                familyFingerPrintDict =  ExtractFamilyParameters(familyDocument);
-
-                //convert to json string
-                familyFingerprintInJson = JsonConvert.SerializeObject(familyFingerPrintDict);
-                Debug.Print(familyFingerprintInJson);
 
 
-                //write to file for debug
-                string filePath = Path.Combine(tempFolder, $"{family.Name}.json");
-                using (StreamWriter writer = new StreamWriter(filePath))
+
+                // Create a new document
+                Document familyDocument = _document.EditFamily(family);
+
+                // make sure it's a real family document
+                if (familyDocument.IsFamilyDocument)
                 {
-                    writer.WriteLine(familyFingerprintInJson);
+
+
+                    familyFingerPrintDict = ExtractFamilyParameters(familyDocument);
+
+                    //convert to json string
+                    familyFingerprintInJson = JsonConvert.SerializeObject(familyFingerPrintDict);
+                    Debug.Print(familyFingerprintInJson);
+
+
+                    //write to file for debug
+                    string filePath = Path.Combine(tempFolder, $"{family.Name}.json");
+                    using (StreamWriter writer = new StreamWriter(filePath))
+                    {
+                        writer.WriteLine(familyFingerprintInJson);
+                    }
+
+
+                    //// Save the family to a temporary file
+                    //SaveAsOptions options = new SaveAsOptions();
+                    //options.OverwriteExistingFile = true;
+                    //familyDocument.SaveAs(outputPath, options);
+
+
                 }
 
-
-
-
-
-                //// Save the family to a temporary file
-                //SaveAsOptions options = new SaveAsOptions();
-                //options.OverwriteExistingFile = true;
-                //familyDocument.SaveAs(outputPath, options);
+                // Close the family document
+                familyDocument.Close(false);
 
 
             }
 
-            // Close the family document
-            familyDocument.Close(false);
 
             return familyFingerprintInJson;
         }
