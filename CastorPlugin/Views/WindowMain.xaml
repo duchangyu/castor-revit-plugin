@@ -1,0 +1,79 @@
+﻿<rl:FluentWindow
+  x:Class="CastorPlugin.Views.WindowMain"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:ml="clr-namespace:CastorPlugin.Views.Markup"
+  xmlns:pages="clr-namespace:CastorPlugin.Views.Pages"
+  xmlns:rl="http://revitlookup.com/xaml"
+  Width="1016"
+  Height="555"
+  MinWidth="644"
+  MinHeight="371"
+  d:DesignHeight="300"
+  d:DesignWidth="200"
+  ExtendsContentIntoTitleBar="True"
+  Icon="../Resources/Images/ShellIcon.ico"
+  mc:Ignorable="d">
+ 
+  <rl:FluentWindow.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ml:ThemesDictionary />
+        <rl:ControlsDictionary />
+        <!--<ml:MenusDictionary />-->
+        <!--<ml:StylesDictionary />-->
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </rl:FluentWindow.Resources>
+
+  <Grid>
+    <rl:TitleBar
+      x:Name="TitleBar"
+      Title="Castor"
+      Margin="42,0,0,0" />
+    <rl:NavigationView
+      x:Name="RootNavigation"
+      BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
+      IsBackButtonVisible="Collapsed"
+      OpenPaneLength="159"
+      PaneDisplayMode="Left"
+      TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}">
+      <rl:NavigationView.MenuItems>
+        <rl:NavigationViewItem
+          Content="Dashboard"
+          Icon="{rl:SymbolIcon AppGeneric24}"
+          TargetPageType="{x:Type pages:DashboardView}" />
+
+      </rl:NavigationView.MenuItems>
+      <rl:NavigationView.FooterMenuItems>
+        <rl:NavigationViewItem
+          Content="Settings"
+          Icon="{rl:SymbolIcon Settings24}"
+          TargetPageType="{x:Type pages:SettingsView}" />
+        <rl:NavigationViewItem
+          Content="About"
+          Icon="{rl:SymbolIcon Info24}"
+          TargetPageType="{x:Type pages:AboutView}">
+          <rl:NavigationViewItem.InfoBadge>
+            <rl:InfoBadge
+              x:Name="AboutItemBadge"
+              Margin="0,6,6,0"
+              Severity="Attention"
+              Style="{DynamicResource DotInfoBadgeStyle}"
+              Visibility="Collapsed" />
+          </rl:NavigationViewItem.InfoBadge>
+        </rl:NavigationViewItem>
+      </rl:NavigationView.FooterMenuItems>
+      <rl:NavigationView.Header>
+        <rl:BreadcrumbBar x:Name="BreadcrumbBar" Margin="12,12,0,0" />
+      </rl:NavigationView.Header>
+      <rl:NavigationView.ContentOverlay>
+        <rl:SnackbarPresenter x:Name="RootSnackbar" />
+      </rl:NavigationView.ContentOverlay>
+    </rl:NavigationView>
+    <ContentPresenter x:Name="RootContentDialog" />
+  </Grid>
+
+</rl:FluentWindow>

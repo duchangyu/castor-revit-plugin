@@ -1,7 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using CastorPlugin.Core.OpenRevitOleStorage;
-using System.IO;
+using System.Reflection;
 using Document = Autodesk.Revit.DB.Document;
 
 namespace CastorPlugin.Core
@@ -38,6 +37,16 @@ namespace CastorPlugin.Core
 
             TaskDialog.Show("Success", "Families in project are scanned and ready to accupy~~");
      
+        }
+
+        internal static UIControlledApplication CreateUiControlledApplication()
+        {
+            return (UIControlledApplication)Activator.CreateInstance(
+            typeof(UIControlledApplication),
+            BindingFlags.Instance | BindingFlags.NonPublic,
+            null,
+            [UiApplication],
+            null);
         }
     }
     
