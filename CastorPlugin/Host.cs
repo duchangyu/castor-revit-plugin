@@ -53,10 +53,10 @@ namespace CastorPlugin
             builder.Services.AddScoped<SettingsView>();
             builder.Services.AddScoped<SettingsViewModel>();
    
-            builder.Services.AddScoped<IWindow, WindowMain>();
+            builder.Services.AddScoped<IWindow, CastorMainWindowView>();
 
             //Startup view
-            //builder.Services.AddTransient<ILookupService, LookupService>();
+            builder.Services.AddTransient<ICastorService, CastorService>();
 
             _host = builder.Build();
             _host.Start();

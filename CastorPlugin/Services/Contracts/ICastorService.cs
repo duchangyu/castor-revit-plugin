@@ -18,25 +18,31 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using System.Windows.Controls;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.Services.Contracts;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+public interface ICastorService : ICastorServiceDependsStage, ICastorServiceShowStage, ICastorServiceExecuteStage
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-    public AboutView(AboutViewModel viewModel)
-    {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
-    }
+    //ICastorServiceDependsStage Snoop(SnoopableType snoopableType);
+    //ICastorServiceDependsStage Snoop(SnoopableObject snoopableObject);
+    //ICastorServiceDependsStage Snoop(IReadOnlyCollection<SnoopableObject> snoopableObjects);
+    new ICastorServiceShowStage DependsOn(IServiceProvider provider);
+    new ICastorServiceExecuteStage Show<T>() where T : Page;
+}
 
-    public AboutViewModel ViewModel { get; }
+public interface ICastorServiceDependsStage
+{
+    ICastorServiceShowStage DependsOn(IServiceProvider provider);
+    ICastorServiceExecuteStage Show<T>() where T : Page;
+}
 
+public interface ICastorServiceShowStage
+{
+    ICastorServiceExecuteStage Show<T>() where T : Page;
+}
+
+public interface ICastorServiceExecuteStage
+{
+    void Execute<T>(Action<T> handler) where T : class;
 }

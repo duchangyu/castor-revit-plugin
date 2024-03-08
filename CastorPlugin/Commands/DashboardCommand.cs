@@ -19,6 +19,8 @@
 // (Rights in Technical Data and Computer Software), as applicable.
 
 using Autodesk.Revit.Attributes;
+using CastorPlugin.Services.Contracts;
+using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
 
 namespace CastorPlugin.Commands;
@@ -29,6 +31,6 @@ public class DashboardCommand : ExternalCommand
 {
     public override void Execute()
     {
-        //Host.GetService<ILookupService>().Show<DashboardView>();
+        Host.GetService<ICastorService>().Show<DashboardView>();
     }
 }

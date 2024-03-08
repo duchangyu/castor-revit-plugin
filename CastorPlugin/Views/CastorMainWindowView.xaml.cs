@@ -2,18 +2,17 @@
 using System.Windows;
 using Wpf.Ui;
 using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
 
 namespace CastorPlugin.Views
 {
     /// <summary>
     /// WindowMain.xaml 的交互逻辑
     /// </summary>
-    public partial class WindowMain : FluentWindow, IWindow
+    public partial class CastorMainWindowView : IWindow
     {
 
         ISettingsService _settingsService;
-        public WindowMain()
+        public CastorMainWindowView()
         {
 
             Wpf.Ui.Application.MainWindow = this;
@@ -21,7 +20,7 @@ namespace CastorPlugin.Views
             InitializeComponent();
         }
 
-        public WindowMain(
+        public CastorMainWindowView(
             INavigationService navigaionService,
               IContentDialogService dialogService,
                ISnackbarService snackbarService,
@@ -76,7 +75,11 @@ namespace CastorPlugin.Views
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
+           
             Wpf.Ui.Application.Windows.Remove(this);
         }
+
+  
+
     }
 }

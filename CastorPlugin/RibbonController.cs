@@ -14,12 +14,14 @@ namespace CastorPlugin
         public static void CreatePanel(UIControlledApplication application, ISettingsService settingsService)
         {
             var addinPanel = application.CreatePanel("Castor Plugin-蓖麻链");
-            var pullButton = addinPanel.AddPullDownButton("RevitLookupButton", "RevitLookup");
+            var pullButton = addinPanel.AddPullDownButton("CastorButton", "Castor");
             pullButton.SetImage("/CastorPlugin;component/Resources/Images/RibbonIcon16.png");
             pullButton.SetLargeImage("/CastorPlugin;component/Resources/Images/RibbonIcon32.png");
 
-            pullButton.AddPushButton<DashboardCommand>("Dashboard");
+           
             pullButton.AddPushButton<StartCommand>("开始");
+            pullButton.AddPushButton<DashboardCommand>("Dashboard");
+            pullButton.AddPushButton<AboutCommand>("关于我们");
 
             //var showButton = panel.AddPushButton<StartCommand>("ShowWpfWin");
             //showButton.SetImage("/CastorPlugin;component/Resources/Icons/RibbonIcon16.png");
@@ -44,7 +46,7 @@ namespace CastorPlugin
         {
             Application.ActionEventHandler.Raise(_ =>
             {
-                RibbonUtils.RemovePanel("CustomCtrl_%CustomCtrl_%Add-Ins%CastorPlugin%RevitLookupButton", PanelName);
+                RibbonUtils.RemovePanel("CustomCtrl_%CustomCtrl_%Add-Ins%CastorPlugin%CastorButton", PanelName);
                 RibbonUtils.RemovePanel("CustomCtrl_%CastorPlugin%RevitLookup.Commands.SnoopSelectionCommand", PanelName);
 
                 var controlledApplication = RevitApi.CreateUiControlledApplication();

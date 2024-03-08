@@ -53,6 +53,10 @@ public sealed class OpenSourceViewModel : ObservableObject
 
         new OpenSourceSoftware()
             .AddSoftware("WPF-UI", "https://github.com/lepoco/wpfui")
-            .AddLicense("MIT License", "https://github.com/lepoco/wpfui/blob/main/LICENSE")
+            .AddLicense("MIT License", "https://github.com/lepoco/wpfui/blob/main/LICENSE"),
+
+        new OpenSourceSoftware()
+            .AddSoftware("Revit Lookup", "https://github.com/jeremytammik/RevitLookup")
+            .AddLicense("MIT License", "https://github.com/jeremytammik/RevitLookup/blob/dev/License.md")
     ];
 }
