@@ -23,18 +23,18 @@ using System.Text.Json.Serialization;
 namespace CastorPlugin.Services.DTO;
 
 [Serializable]
-public sealed class GutHubResponse
+public sealed class CheckUpdatesResponse
 {
     [JsonPropertyName("html_url")] public string Url { get; set; }
     [JsonPropertyName("tag_name")] public string TagName { get; set; }
     [JsonPropertyName("draft")] public bool Draft { get; set; }
     [JsonPropertyName("prerelease")] public bool PreRelease { get; set; }
     [JsonPropertyName("published_at")] public DateTimeOffset PublishedDate { get; set; }
-    [JsonPropertyName("assets")] public List<GutHubResponseAsset> Assets { get; set; }
+    [JsonPropertyName("assets")] public List<UpdateCheckResponseAsset> Assets { get; set; }
 }
 
 [Serializable]
-public sealed class GutHubResponseAsset
+public sealed class UpdateCheckResponseAsset
 {
     [JsonPropertyName("name")] public string Name { get; set; }
 

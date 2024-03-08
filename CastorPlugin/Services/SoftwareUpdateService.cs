@@ -67,7 +67,7 @@ public sealed class SoftwareUpdateService(IConfiguration configuration, ILogger<
                 releasesJson = await aliOssClient.GetStringAsync("https://castor-public.oss-cn-beijing.aliyuncs.com/download/castorplugin/releases.json");
             }
 
-            var releases = JsonSerializer.Deserialize<List<GutHubResponse>>(releasesJson);
+            var releases = JsonSerializer.Deserialize<List<CheckUpdatesResponse>>(releasesJson);
             if (releases is not null)
             {
                 var latestRelease = releases
