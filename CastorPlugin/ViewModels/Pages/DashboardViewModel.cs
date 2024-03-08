@@ -18,24 +18,30 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using CastorPlugin.Core;
+using CastorPlugin.Services;
+using CastorPlugin.ViewModels.Contracts;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Wpf.Ui;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.ViewModels.Pages;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+public sealed partial class DashboardViewModel(
+    INavigationService navigationService,
+    NotificationService notificationService,
+    IServiceProvider serviceProvider)
+    : ObservableObject, IDashboardViewModel
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-    public AboutView(AboutViewModel viewModel)
-    {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
-    }
+    public IAsyncRelayCommand<string> NavigateSnoopPageCommand { get; }
+    public IAsyncRelayCommand<string> OpenDialogCommand { get; }
 
-    public AboutViewModel ViewModel { get; }
+    private bool Validate()
+    {
+        if (RevitApi.UiApplication is null) return true;
+        if (RevitApi.UiDocument is not null) return true;
+
+        notificationService.ShowWarning("Request denied", "There are no open documents");
+        return false;
+    }
 }

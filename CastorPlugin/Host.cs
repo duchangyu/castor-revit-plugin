@@ -1,16 +1,16 @@
-﻿using CastorPlugin.Utils;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System.Configuration;
-using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using System.Runtime.Versioning;
+﻿using CastorPlugin.Config;
 using CastorPlugin.Services;
 using CastorPlugin.Services.Contracts;
+using CastorPlugin.ViewModels.Contracts;
+using CastorPlugin.ViewModels.Pages;
 using CastorPlugin.Views;
-using UIFramework;
+using CastorPlugin.Views.Pages;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Reflection;
+using Wpf.Ui;
 
 namespace CastorPlugin
 {
@@ -21,67 +21,62 @@ namespace CastorPlugin
 
         public static void Start()
         {
-            _host = Microsoft.Extensions.Hosting.Host
-                .CreateDefaultBuilder()
-                .ConfigureAppConfiguration(SetConfiguration)
-                .ConfigureServices(AddServices)
-                .Build();
+            var builder = Microsoft.Extensions.Hosting.Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
+            {
+                ContentRootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly()!.Location),
+                DisableDefaults = true
+            });
 
+            //Logging
+            builder.Logging.ClearProviders();
+            builder.Logging.AddLoggerConfiguration();
+
+            //Configuration
+            builder.Configuration.AddFoldersConfiguration();
+
+            //App services
+            builder.Services.AddSingleton<ISettingsService, SettingsService>();
+            builder.Services.AddSingleton<ISoftwareUpdateService, SoftwareUpdateService>();
+
+            //UI services
+            builder.Services.AddScoped<INavigationService, NavigationService>();
+            builder.Services.AddScoped<ISnackbarService, SnackbarService>();
+            builder.Services.AddScoped<IContentDialogService, ContentDialogService>();
+            builder.Services.AddScoped<NotificationService>();
+
+            //Views
+       
+            builder.Services.AddScoped<AboutView>();
+            builder.Services.AddScoped<AboutViewModel>();
+            builder.Services.AddScoped<DashboardView>();
+            builder.Services.AddScoped<IDashboardViewModel, DashboardViewModel>();
+            builder.Services.AddScoped<SettingsView>();
+            builder.Services.AddScoped<SettingsViewModel>();
+   
+            builder.Services.AddScoped<IWindow, WindowMain>();
+
+            //Startup view
+            //builder.Services.AddTransient<ILookupService, LookupService>();
+
+            _host = builder.Build();
             _host.Start();
 
         }
 
-        private static void AddServices(HostBuilderContext context, IServiceCollection services)
-        {
-            //services
-            services.AddSingleton<ISettingsService, SettingsService>();
 
-            //views
-            services.AddScoped<IWindow, WindowMain>(); // the main window view
-           
-        }
-
-        private static void SetConfiguration( IConfigurationBuilder builder)
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var assemblyLocation = assembly.Location;
-            var versionInfo = FileVersionInfo.GetVersionInfo(assemblyLocation);
-            var addinVersion = new Version(versionInfo.FileVersion).ToString(3);
-#if RELEASE
-        var version = addinVersion.Split('.')[0];
-        if (version == "1") version = "Develop";
-        var programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var userDataLocation = Path.Combine(programDataPath, @"Autodesk\Revit\Addins\", version, "Castor");
-#else
-            var userDataLocation = Path.GetDirectoryName(assemblyLocation)!;
-#endif
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var writeAccess = AccessUtils.CheckWriteAccess(assemblyLocation) && !assemblyLocation.StartsWith(appDataPath);
-
-            var targetFrameworkAttributes = assembly.GetCustomAttributes(typeof(TargetFrameworkAttribute), true);
-            var targetFrameworkAttribute = (TargetFrameworkAttribute)targetFrameworkAttributes.First();
-            var targetFramework = targetFrameworkAttribute.FrameworkDisplayName;
-
-            builder.AddInMemoryCollection(new KeyValuePair<string, string>[]
-            {
-            new("Assembly", assemblyLocation),
-            new("Framework", targetFramework),
-            new("AddinVersion", addinVersion),
-            new("ConfigFolder", Path.Combine(userDataLocation, "Config")),
-            new("DownloadFolder", Path.Combine(userDataLocation, "Downloads")),
-            new("FolderAccess", writeAccess ? "Write" : "Read")
-            });
-        }
 
         public static void Start(IHost host)
         {
 
             _host = host;
             host.Start();
+
         }
         public static void Stop()
         {
             _host.StopAsync().Wait();
+
+             _host.Dispose();
 
         }
 

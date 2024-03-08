@@ -22,20 +22,24 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Markup;
+using CastorPlugin.Services.Enums;
 
 namespace CastorPlugin.ViewModels.Converters;
 
-[ValueConversion(typeof(bool), typeof(bool))]
-public sealed class InverseBooleanConverter : MarkupExtension, IValueConverter
+[ValueConversion(typeof(SoftwareUpdateState), typeof(Visibility))]
+public sealed class UpToDateVisibilityConverter : MarkupExtension, IMultiValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
-        return value is not null && !(bool)value;
+        var state = (SoftwareUpdateState) values[0];
+        var isUpdating = (bool) values[1];
+        var isUpdateChecked = (bool) values[2];
+        return state == SoftwareUpdateState.UpToDate && !isUpdating && isUpdateChecked ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
     {
-        return Convert(value, targetType, parameter, culture);
+        throw new NotSupportedException();
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)
@@ -44,18 +48,18 @@ public sealed class InverseBooleanConverter : MarkupExtension, IValueConverter
     }
 }
 
-[ValueConversion(typeof(bool), typeof(Visibility))]
-public sealed class StringVisibilityConverter : MarkupExtension, IValueConverter
+[ValueConversion(typeof(SoftwareUpdateState), typeof(Visibility))]
+public sealed class UpdateAvailableCardVisibilityConverter : MarkupExtension, IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not string text) return Visibility.Collapsed;
-        return string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+        var state = (SoftwareUpdateState) value!;
+        return state is SoftwareUpdateState.ReadyToDownload or SoftwareUpdateState.ErrorDownloading ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        return Convert(value, targetType, parameter, culture);
+        throw new NotSupportedException();
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)
@@ -64,18 +68,18 @@ public sealed class StringVisibilityConverter : MarkupExtension, IValueConverter
     }
 }
 
-[ValueConversion(typeof(bool), typeof(Visibility))]
-public sealed class BoolVisibilityConverter : MarkupExtension, IValueConverter
+[ValueConversion(typeof(SoftwareUpdateState), typeof(Visibility))]
+public sealed class UpdateDownloadedVisibilityConverter : MarkupExtension, IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not bool b) return Visibility.Collapsed;
-        return b ? Visibility.Visible : Visibility.Collapsed;
+        var state = (SoftwareUpdateState) value!;
+        return state is SoftwareUpdateState.ReadyToInstall ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        return Convert(value, targetType, parameter, culture);
+        throw new NotSupportedException();
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)
@@ -84,18 +88,38 @@ public sealed class BoolVisibilityConverter : MarkupExtension, IValueConverter
     }
 }
 
-[ValueConversion(typeof(bool), typeof(Visibility))]
-public sealed class InverseBoolVisibilityConverter : MarkupExtension, IValueConverter
+[ValueConversion(typeof(SoftwareUpdateState), typeof(Visibility))]
+public class InverseUpdateDownloadedVisibilityConverter : MarkupExtension, IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        if (value is not bool b) return Visibility.Collapsed;
-        return b ? Visibility.Collapsed : Visibility.Visible;
+        var state = (SoftwareUpdateState) value!;
+        return state is SoftwareUpdateState.ReadyToInstall ? Visibility.Collapsed : Visibility.Visible;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
     {
-        return Convert(value, targetType, parameter, culture);
+        throw new NotSupportedException();
+    }
+
+    public override object ProvideValue(IServiceProvider serviceProvider)
+    {
+        return this;
+    }
+}
+
+[ValueConversion(typeof(SoftwareUpdateState), typeof(Visibility))]
+public sealed class ErrorCardVisibilityConverter : MarkupExtension, IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        var state = (SoftwareUpdateState) value!;
+        return state is SoftwareUpdateState.ErrorChecking or SoftwareUpdateState.ErrorDownloading ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
     }
 
     public override object ProvideValue(IServiceProvider serviceProvider)

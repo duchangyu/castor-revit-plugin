@@ -1,30 +1,33 @@
 ﻿using CastorPlugin.Services.Contracts;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Wpf.Ui;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
-using Autodesk.Windows;
 
-namespace CastorPlugin.ViewModels.Pages
+namespace CastorPlugin.ViewModels.Pages;
+
+public sealed partial class SettingsViewModel(
+    ISettingsService settingsService, 
+    INavigationService navigationService,
+    IWindow window) : ObservableObject
 {
-    public sealed partial class SettingsViewModel(ISettingsService settingsService, IWindow window) : ObservableObject
-    {
-        [ObservableProperty] private ApplicationTheme _theme = settingsService.Theme;
-        [ObservableProperty] private WindowBackdropType _background = settingsService.Background;
+    [ObservableProperty] private ApplicationTheme _theme = settingsService.Theme;
+    [ObservableProperty] private WindowBackdropType _background = settingsService.Background;
 
-        [ObservableProperty] private bool _useTransition = settingsService.TransitionDuration > 0;
-            [ObservableProperty] private bool _useSizeRestoring = settingsService.UseSizeRestoring;
-      
+    [ObservableProperty] private bool _useTransition = settingsService.TransitionDuration > 0;
+    [ObservableProperty] private bool _useSizeRestoring = settingsService.UseSizeRestoring;
+  
 
 
 
-        public List<ApplicationTheme> Themes { get; } =
-   [
-       ApplicationTheme.Light,
+    public List<ApplicationTheme> Themes { get; } =
+    [
+        ApplicationTheme.Light,
         ApplicationTheme.Dark
-   // ApplicationTheme.HighContrast
-   ];
+    // ApplicationTheme.HighContrast
+    ];
 
-        public List<WindowBackdropType> BackgroundEffects { get; } =
+    public List<WindowBackdropType> BackgroundEffects { get; } =
     [
         WindowBackdropType.None,
         WindowBackdropType.Acrylic,
@@ -33,37 +36,41 @@ namespace CastorPlugin.ViewModels.Pages
     ];
 
 
-        partial void OnThemeChanged(ApplicationTheme value)
+    partial void OnThemeChanged(ApplicationTheme value)
+    {
+        settingsService.Theme = value;
+
+        foreach (var target in Wpf.Ui.Application.Windows)
         {
-            settingsService.Theme = value;
-
-            foreach (var target in Wpf.Ui.Application.Windows)
-            {
-                Wpf.Ui.Application.MainWindow = target;
-                ApplicationThemeManager.Apply(settingsService.Theme, settingsService.Background);
-            }
-        }
-
-
-        partial void OnBackgroundChanged(WindowBackdropType value)
-        {
-            settingsService.Background = value;
+            Wpf.Ui.Application.MainWindow = target;
             ApplicationThemeManager.Apply(settingsService.Theme, settingsService.Background);
         }
-
-    
-
-        partial void OnUseSizeRestoringChanged(bool value)
-        {
-            settingsService.UseSizeRestoring = value;
-            if (value) window.EnableSizeTracking();
-            else window.DisableSizeTracking();
-        }
-
- 
-
-
-
-
     }
+
+
+    partial void OnBackgroundChanged(WindowBackdropType value)
+    {
+        settingsService.Background = value;
+        ApplicationThemeManager.Apply(settingsService.Theme, settingsService.Background);
+    }
+
+
+  partial void OnUseTransitionChanged(bool value)
+    {
+        var transitionDuration = settingsService.ApplyTransition(value);
+        navigationService.GetNavigationControl().TransitionDuration = transitionDuration;
+    }
+
+    partial void OnUseSizeRestoringChanged(bool value)
+    {
+        settingsService.UseSizeRestoring = value;
+        if (value) window.EnableSizeTracking();
+        else window.DisableSizeTracking();
+    }
+
+
+
+
+
+
 }

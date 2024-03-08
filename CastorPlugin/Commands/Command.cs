@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.Attributes;
+using CastorPlugin.Core;
 using CastorPlugin.Utils;
 using CastorPlugin.ViewModels;
 using CastorPlugin.Views;
@@ -12,6 +13,11 @@ namespace CastorPlugin.Commands
     {
         public override void Execute()
         {
+            if (RevitApi.UiApplication == null)
+            {
+                RevitApi.UiApplication = UiApplication;
+            }
+
             if (WindowController.Focus<CastorPluginView>()) return;
 
             var viewModel = new CastorPluginViewModel();

@@ -18,24 +18,24 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using System.Windows;
+using System.Windows.Markup;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.Views.Markup;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+[Localizability(LocalizationCategory.Ignore)]
+[Ambient]
+[UsableDuringInitialization(true)]
+public class StylesDictionary : ResourceDictionary
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-    public AboutView(AboutViewModel viewModel)
-    {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
-    }
+    private const string DictionaryUri = "pack://application:,,,/RevitLookup;component/Views/Resources/RevitLookup.Ui.xaml";
 
-    public AboutViewModel ViewModel { get; }
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StylesDictionary"/> class.
+    /// Default constructor defining <see cref="ResourceDictionary.Source"/> of the <c>RevitLookup UI</c> controls dictionary.
+    /// </summary>
+    public StylesDictionary()
+    {
+        Source = new Uri(DictionaryUri, UriKind.Absolute);
+    }
 }

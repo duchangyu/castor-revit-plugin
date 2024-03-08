@@ -1,5 +1,6 @@
 ﻿using CastorPlugin.Services.Contracts;
 using System.Windows;
+using Wpf.Ui;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
@@ -20,9 +21,21 @@ namespace CastorPlugin.Views
             InitializeComponent();
         }
 
-        public WindowMain(ISettingsService settingsService) : this()
+        public WindowMain(
+            INavigationService navigaionService,
+              IContentDialogService dialogService,
+               ISnackbarService snackbarService,
+            ISettingsService settingsService
+            ) : this()
         {
             _settingsService = settingsService;
+            WindowBackdropType = settingsService.Background;
+
+            navigaionService.SetNavigationControl(RootNavigation);
+            dialogService.SetContentPresenter(RootContentDialog);
+
+            snackbarService.SetSnackbarPresenter(RootSnackbar);
+            snackbarService.DefaultTimeOut = TimeSpan.FromSeconds(3);
 
             RestoreSize(settingsService);
             ApplicationThemeManager.Apply(_settingsService.Theme, _settingsService.Background);

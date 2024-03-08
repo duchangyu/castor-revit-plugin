@@ -1,12 +1,9 @@
-﻿using Autodesk.Revit.UI;
-using CastorPlugin.Commands;
-using CastorPlugin.Core;
+﻿using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
 using Nice3point.Revit.Toolkit.External;
 using Nice3point.Revit.Toolkit.External.Handlers;
-using Serilog.Events;
-using System.Windows.Controls;
-using System.Windows.Media.Imaging;
+using System.Diagnostics;
+using System.IO;
 
 
 namespace CastorPlugin
@@ -22,19 +19,34 @@ namespace CastorPlugin
         {
             // binding revit application
             RevitApi.UiApplication = UiApplication;
-            CreateLogger();
-            CreateRibbon();
 
             Host.Start();
 
+            var settingsService = Host.GetService<ISettingsService>();
+            var updateService = Host.GetService<ISoftwareUpdateService>();
+
+            EnableHardwareRendering(settingsService);
+            RibbonController.CreatePanel(Application, settingsService);
+
+            updateService.CheckUpdates();
         }
+
 
         public override void OnShutdown()
         {
-            Log.CloseAndFlush();
+       
             SaveSettings();
 
+            UpdateSoftware();
+
             Host.Stop();
+        }
+
+
+        private static void UpdateSoftware()
+        {
+            var updateService = Host.GetService<ISoftwareUpdateService>();
+            if (File.Exists(updateService.LocalFilePath)) Process.Start(updateService.LocalFilePath);
         }
 
         private void SaveSettings()
@@ -43,40 +55,22 @@ namespace CastorPlugin
             settingsService.Save();
         }
 
-        private void CreateRibbon()
+
+
+
+        public static void EnableHardwareRendering(ISettingsService settingsService)
         {
-            var panel = Application.CreatePanel("Commands", "CastorPlugin");
+            //if (!settingsService.UseHardwareRendering) return;
 
-            var showButtonSimple = panel.AddPushButton<Command>("Execute");
-            showButtonSimple.SetImage("/CastorPlugin;component/Resources/Icons/RibbonIcon16.png");
-            showButtonSimple.SetLargeImage("/CastorPlugin;component/Resources/Icons/RibbonIcon32.png");
-
-            var showButton = panel.AddPushButton<StartCommand>("ShowWpfWin");
-            showButton.SetImage("/CastorPlugin;component/Resources/Icons/RibbonIcon16.png");
-            showButton.SetLargeImage("/CastorPlugin;component/Resources/Icons/RibbonIcon32.png");
-
-
-
-
-
-
-
+            ////Revit overrides render mode during initialization
+            ////EventHandler is called after initialisation
+            //ActionEventHandler.Raise(_ => RenderOptions.ProcessRenderMode = RenderMode.Default);
         }
 
-        private static void CreateLogger()
+        public static void DisableHardwareRendering(ISettingsService settingsService)
         {
-            const string outputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}";
-
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Debug(LogEventLevel.Debug, outputTemplate)
-                .MinimumLevel.Debug()
-                .CreateLogger();
-
-            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
-            {
-                var e = (Exception)args.ExceptionObject;
-                Log.Fatal(e, "Domain unhandled exception");
-            };
+            //if (settingsService.UseHardwareRendering) return;
+            //RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;
         }
     }
 }

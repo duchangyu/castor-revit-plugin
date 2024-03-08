@@ -18,24 +18,20 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using CastorPlugin.Services.Enums;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.Services.Contracts;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+public interface ISoftwareUpdateService
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-    public AboutView(AboutViewModel viewModel)
-    {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
-    }
+    public SoftwareUpdateState State { get; }
+    public string CurrentVersion { get; }
+    public string NewVersion { get; }
+    public string LatestCheckDate { get; }
+    public string ReleaseNotesUrl { get; }
+    public string ErrorMessage { get; }
+    public string LocalFilePath { get; }
 
-    public AboutViewModel ViewModel { get; }
+    Task CheckUpdates();
+    Task DownloadUpdate();
 }

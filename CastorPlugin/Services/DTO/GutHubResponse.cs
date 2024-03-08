@@ -18,24 +18,26 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using System.Text.Json.Serialization;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.Services.DTO;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+[Serializable]
+public sealed class GutHubResponse
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
-    public AboutView(AboutViewModel viewModel)
-    {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
-    }
+    [JsonPropertyName("html_url")] public string Url { get; set; }
+    [JsonPropertyName("tag_name")] public string TagName { get; set; }
+    [JsonPropertyName("draft")] public bool Draft { get; set; }
+    [JsonPropertyName("prerelease")] public bool PreRelease { get; set; }
+    [JsonPropertyName("published_at")] public DateTimeOffset PublishedDate { get; set; }
+    [JsonPropertyName("assets")] public List<GutHubResponseAsset> Assets { get; set; }
+}
 
-    public AboutViewModel ViewModel { get; }
+[Serializable]
+public sealed class GutHubResponseAsset
+{
+    [JsonPropertyName("name")] public string Name { get; set; }
+
+    [JsonPropertyName("browser_download_url")]
+    public string DownloadUrl { get; set; }
 }

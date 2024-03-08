@@ -1,6 +1,8 @@
 ﻿
+using Autodesk.Internal.InfoCenter;
 using CastorPlugin.Services.Contracts;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -39,11 +41,13 @@ namespace CastorPlugin.Services
     {
         private const int DefaultTransitionDuration = 200;
         private readonly Settings _settings;
-        private readonly string _settingsFile;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<SettingsService> _logger;
 
-        public SettingsService(IConfiguration configuration)
+        public SettingsService(IConfiguration configuration, ILogger<SettingsService> logger)
         {
-            _settingsFile = configuration.GetValue<string>("ConfigFolder").AppendPath("Settings.cfg");
+            _configuration = configuration;
+            _logger = logger;
             _settings = LoadSettings();
 
         }
@@ -93,7 +97,9 @@ namespace CastorPlugin.Services
 
         public void Save()
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(_settingsFile)!);
+            var settingsFile = _configuration.GetValue<string>("SettingsPath");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(settingsFile)!);
 
             var jsonSerializerOptions = new JsonSerializerOptions
             {
@@ -106,19 +112,17 @@ namespace CastorPlugin.Services
 
             var json = JsonSerializer.Serialize(_settings, jsonSerializerOptions);
 
-            File.WriteAllText(_settingsFile, json);
+            File.WriteAllText(settingsFile, json);
         }
 
         private Settings LoadSettings()
         {
-            if (!File.Exists(_settingsFile))
-            {
-                return new Settings();
-            }
+            var settingsFile = _configuration.GetValue<string>("SettingsPath");
+            if (!File.Exists(settingsFile)) return new Settings();
 
             try
             {
-                using var config = File.OpenRead(_settingsFile);
+                using var config = File.OpenRead(settingsFile);
                 var jsonSerializerOptions = new JsonSerializerOptions
                 {
                     Converters =
@@ -129,12 +133,12 @@ namespace CastorPlugin.Services
 
                 return JsonSerializer.Deserialize<Settings>(config, jsonSerializerOptions);
             }
-            catch (Exception)
+            catch
             {
-
-                Debug.WriteLine("Castor: settings deserializing error");
-                return new Settings();
+                _logger.LogInformation("Settings deserializing error");
             }
+
+            return new Settings();
 
         }
 

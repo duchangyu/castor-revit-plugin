@@ -16,7 +16,7 @@
   ExtendsContentIntoTitleBar="True"
   Icon="../Resources/Images/ShellIcon.ico"
   mc:Ignorable="d">
- 
+
   <rl:FluentWindow.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -24,6 +24,7 @@
         <rl:ControlsDictionary />
         <!--<ml:MenusDictionary />-->
         <!--<ml:StylesDictionary />-->
+
       </ResourceDictionary.MergedDictionaries>
     </ResourceDictionary>
   </rl:FluentWindow.Resources>

@@ -1,10 +1,14 @@
 
 
 using Autodesk.Revit.Attributes;
+using CastorPlugin.Core;
+using CastorPlugin.Services.Contracts;
 using CastorPlugin.Utils;
 using CastorPlugin.ViewModels;
 using CastorPlugin.Views;
+using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
+using System.Windows;
 
 namespace CastorPlugin.Commands;
 
@@ -14,12 +18,10 @@ public class StartCommand : ExternalCommand
 {
     public override void Execute()
     {
-        //Host.GetService<ILookupService>().Show<DashboardView>();
 
         if (WindowController.Focus<WindowMain>()) return;
 
-        //var viewModel = new WindowMainViewModel();
-        var view = new WindowMain();
-        WindowController.Show(view, UiApplication.MainWindowHandle);
+        Host.GetService<IWindow>().Visibility = Visibility.Visible;
+
     }
 }

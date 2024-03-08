@@ -18,24 +18,41 @@
 // Software - Restricted Rights) and DFAR 252.227-7013(c)(1)(ii)
 // (Rights in Technical Data and Computer Software), as applicable.
 
-using CastorPlugin.ViewModels.Pages;
-using Wpf.Ui.Controls;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Documents;
+using CastorPlugin.ViewModels.Dialogs;
+using Wpf.Ui;
 
-namespace CastorPlugin.Views.Pages;
+namespace CastorPlugin.Views.Dialogs;
 
-public sealed partial class AboutView : INavigableView<AboutViewModel>
+public sealed partial class OpenSourceDialog
 {
-    public AboutView()
+    private readonly IContentDialogService _dialogService;
+
+    public OpenSourceDialog(IContentDialogService dialogService)
     {
+        _dialogService = dialogService;
         InitializeComponent();
-        DataContext = this;
+        DataContext = new OpenSourceViewModel();
     }
-    public AboutView(AboutViewModel viewModel)
+    
+    public async Task ShowAsync()
     {
-        ViewModel = viewModel;
-        InitializeComponent();
-        DataContext = this;
+        var dialogOptions = new SimpleContentDialogCreateOptions
+        {
+            Title = "Third-Party Software",
+            Content = this,
+            CloseButtonText = "Close",
+            DialogMaxWidth = 600
+        };
+
+        await _dialogService.ShowSimpleDialogAsync(dialogOptions);
     }
 
-    public AboutViewModel ViewModel { get; }
+    private void OpenLink(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource is not Hyperlink link) return;
+        Process.Start(link.NavigateUri.OriginalString);
+    }
 }
