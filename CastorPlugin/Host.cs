@@ -52,7 +52,10 @@ namespace CastorPlugin
             builder.Services.AddScoped<IDashboardViewModel, DashboardViewModel>();
             builder.Services.AddScoped<SettingsView>();
             builder.Services.AddScoped<SettingsViewModel>();
-   
+            builder.Services.AddScoped<DigView>();
+            builder.Services.AddScoped<DigViewModel>();
+
+
             builder.Services.AddScoped<IWindow, CastorMainWindowView>();
 
             //Startup view

@@ -47,7 +47,7 @@ namespace CastorPlugin
             Application.ActionEventHandler.Raise(_ =>
             {
                 RibbonUtils.RemovePanel("CustomCtrl_%CustomCtrl_%Add-Ins%CastorPlugin%CastorButton", PanelName);
-                RibbonUtils.RemovePanel("CustomCtrl_%CastorPlugin%RevitLookup.Commands.SnoopSelectionCommand", PanelName);
+                //RibbonUtils.RemovePanel("CustomCtrl_%CastorPlugin%RevitLookup.Commands.SnoopSelectionCommand", PanelName);
 
                 var controlledApplication = RevitApi.CreateUiControlledApplication();
                 CreatePanel(controlledApplication, settingsService);

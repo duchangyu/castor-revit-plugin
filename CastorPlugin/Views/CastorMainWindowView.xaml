@@ -46,7 +46,10 @@
           Content="Dashboard"
           Icon="{rl:SymbolIcon AppGeneric24}"
           TargetPageType="{x:Type pages:DashboardView}" />
-
+        <rl:NavigationViewItem
+          Content="Dashboard"
+          Icon="{rl:SymbolIcon AppGeneric24}"
+          TargetPageType="{x:Type pages:DigView}" />
       </rl:NavigationView.MenuItems>
       <rl:NavigationView.FooterMenuItems>
         <rl:NavigationViewItem

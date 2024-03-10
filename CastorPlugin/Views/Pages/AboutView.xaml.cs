@@ -25,11 +25,6 @@ namespace CastorPlugin.Views.Pages;
 
 public sealed partial class AboutView : INavigableView<AboutViewModel>
 {
-    public AboutView()
-    {
-        InitializeComponent();
-        DataContext = this;
-    }
     public AboutView(AboutViewModel viewModel)
     {
         ViewModel = viewModel;

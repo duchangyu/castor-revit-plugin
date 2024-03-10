@@ -161,7 +161,7 @@ namespace CastorPlugin.Core
             Dictionary<string, object> familyFingerPrintDict = new Dictionary<string, object>();
 
 
-            if (family.IsEditable)
+            if (family.IsEditable && !_document.IsReadOnly)
             {
 
                 // Create a new document

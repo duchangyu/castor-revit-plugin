@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CastorPlugin.Services.DTO
 {
-    internal class AssetDTO
+    internal class Web3AssetDTO
     {
     }
 }
