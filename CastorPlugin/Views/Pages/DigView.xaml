@@ -13,30 +13,58 @@
   d:DesignWidth="800"
   mc:Ignorable="d">
   <DockPanel Margin="12" LastChildFill="True">
-    <Button
-      Name="btnDig"
-      Command="{Binding ViewModel.DigCommand}"
-      Content="Dig"
-      DockPanel.Dock="Top" />
+
+
+    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+      <Button
+        Name="btnDig"
+        Command="{Binding ViewModel.DigCommand}"
+        Content="Dig"
+        DockPanel.Dock="Top" />
+      <Button
+        Name="btnDigTest"
+        Click="btnDigTest_Click"
+        Content="DigDirectly" />
+      <TextBox
+        Name="addressBar"
+        DockPanel.Dock="Top"
+        Text="https://www.baidu.com" />
+      <Button
+        HorizontalAlignment="Right"
+        Click="Button_Click"
+        Content="Go"
+        DockPanel.Dock="Top" />
+    </StackPanel>
+
     <Button
       Click="Button_Click"
-      Content="test"
+      Content="+"
       DockPanel.Dock="Top" />
-    <TextBox
-      Name="addressBar"
-      DockPanel.Dock="Top"
-      Text="https://www.baidu.com" />
+
+    <Grid x:Name="TabArea" DockPanel.Dock="Bottom">
 
 
+      <TabControl
+        x:Name="tabControl1"
+        IsSynchronizedWithCurrentItem="True"
+        ItemsSource="{Binding Path=WebView2Tabs, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+        SelectedIndex="{Binding Path=SelectedIndex, Mode=OneWayToSource, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+    </Grid>
+
+    <rl:InfoBar DockPanel.Dock="Bottom">
+      <TextBlock Text=" Copy right @BIMonChain 2024 " />
+    </rl:InfoBar>
 
     <Wpf:WebView2
       Name="webView"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch"
-      DockPanel.Dock="Bottom"
       Source="https://www.baidu.com" />
 
+
+
   </DockPanel>
+
 
 
 

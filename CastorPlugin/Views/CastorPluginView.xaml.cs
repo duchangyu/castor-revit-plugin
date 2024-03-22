@@ -18,7 +18,7 @@ namespace CastorPlugin.Views
       
         private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            RevitApi.ScanFamilies();
+
 
         }
     }

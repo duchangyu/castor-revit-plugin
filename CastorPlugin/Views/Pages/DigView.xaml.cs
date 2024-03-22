@@ -1,4 +1,5 @@
-﻿using CastorPlugin.ViewModels.Pages;
+﻿using CastorPlugin.Core;
+using CastorPlugin.ViewModels.Pages;
 using Microsoft.Web.WebView2.Core;
 using System.IO;
 using System.Windows;
@@ -11,19 +12,15 @@ namespace CastorPlugin.Views.Pages
     /// </summary>
     public partial class DigView : INavigableView<DigViewModel>
     {
-        //public DigView()
-        //{
-        //    InitializeComponent();
-        //    InitWebView2Env();
-        //    DataContext = this;
-        //}
 
         public DigView(DigViewModel digViewModel)
         {
+  
             ViewModel = digViewModel;
             InitializeComponent();
             InitWebView2Env();
             DataContext = this;
+
         }
 
 
@@ -44,11 +41,10 @@ namespace CastorPlugin.Views.Pages
                     await webView.EnsureCoreWebView2Async(env);
 
                     webView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
-
+                   
 
                 }
 
-                
 
                 
             }
@@ -66,8 +62,6 @@ namespace CastorPlugin.Views.Pages
             if (webView != null)
             {
 
-             
-
                 if (webView.CoreWebView2 != null)
                 {
 
@@ -80,6 +74,11 @@ namespace CastorPlugin.Views.Pages
                 }
             }
 
+        }
+
+        private void btnDigTest_Click(object sender, RoutedEventArgs e)
+        {
+            //RevitApi.ScanFamilies();
         }
     }
 }

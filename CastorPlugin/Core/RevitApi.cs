@@ -158,21 +158,40 @@ public static class RevitApi
 
 
 
-    public static void ScanFamilies()
-    {
+    //public static void ScanFamilies()
+    //{
+       
+
+    //    using (Transaction trans = new Transaction(Document))
+    //    {
+    //        trans.Start("begin to scan all families in document");
+
+    //        if (Document.IsReadOnly)
+    //        {
+             
+    //            TaskDialog.Show("Information", "Document is readonly, process stoped.   Please remove readonly flag first.");
+    //            return;
+    //        }
+
+    //        // Create an instance of FamilyExtractor
+    //        FamilyExtractor familyExtractor = new FamilyExtractor(Document);
+
+    //        // Extract families to the temporary folder
+    //        familyExtractor.ExtractFamilies();
+
+    //        //string basicInfo =  Tool.GetBasicInformation(tempFolder);
+    //        //string imgbase64 = Tool.GetFamilyPreviewThumbnail(tempFolder);
 
 
-        // Create an instance of FamilyExtractor
-        FamilyExtractor familyExtractor = new FamilyExtractor(Document);
+    //        trans.Commit();
 
-        // Extract families to the temporary folder
-        familyExtractor.ExtractFamilies();
+    //    }
 
-        //string basicInfo =  Tool.GetBasicInformation(tempFolder);
-        //string imgbase64 = Tool.GetFamilyPreviewThumbnail(tempFolder);
 
-        TaskDialog.Show("Success", "Families in project are scanned and ready to accupy~~");
 
-    }
+
+    //    TaskDialog.Show("Success", "Families in project are scanned and ready to accupy~~");
+
+    //}
 
 }

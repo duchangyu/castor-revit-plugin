@@ -14,7 +14,7 @@
   d:DesignHeight="300"
   d:DesignWidth="200"
   ExtendsContentIntoTitleBar="True"
-  Icon="../Resources/Images/ShellIcon.ico"
+  Icon="../../Resources/Images/ShellIcon.ico"
   mc:Ignorable="d">
 
   <rl:FluentWindow.Resources>
@@ -30,12 +30,18 @@
   </rl:FluentWindow.Resources>
 
   <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="615*" />
+      <ColumnDefinition Width="29*" />
+    </Grid.ColumnDefinitions>
     <rl:TitleBar
       x:Name="TitleBar"
       Title="Castor"
+      Grid.ColumnSpan="2"
       Margin="42,0,0,0" />
     <rl:NavigationView
       x:Name="RootNavigation"
+      Grid.ColumnSpan="2"
       BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
       IsBackButtonVisible="Collapsed"
       OpenPaneLength="159"
@@ -47,7 +53,7 @@
           Icon="{rl:SymbolIcon AppGeneric24}"
           TargetPageType="{x:Type pages:DashboardView}" />
         <rl:NavigationViewItem
-          Content="Dashboard"
+          Content="DigView"
           Icon="{rl:SymbolIcon AppGeneric24}"
           TargetPageType="{x:Type pages:DigView}" />
       </rl:NavigationView.MenuItems>
@@ -74,10 +80,13 @@
         <rl:BreadcrumbBar x:Name="BreadcrumbBar" Margin="12,12,0,0" />
       </rl:NavigationView.Header>
       <rl:NavigationView.ContentOverlay>
-        <rl:SnackbarPresenter x:Name="RootSnackbar" />
+        <rl:SnackbarPresenter x:Name="RootSnackbar" Panel.ZIndex="99" />
       </rl:NavigationView.ContentOverlay>
     </rl:NavigationView>
-    <ContentPresenter x:Name="RootContentDialog" />
+    <ContentPresenter x:Name="RootContentDialog" Grid.ColumnSpan="2" />
+
+
+
   </Grid>
 
 </rl:FluentWindow>

@@ -20,6 +20,7 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CastorPlugin.ViewModels.Objects;
+using static System.Net.WebRequestMethods;
 
 namespace CastorPlugin.ViewModels.Dialogs;
 
@@ -57,6 +58,14 @@ public sealed class OpenSourceViewModel : ObservableObject
 
         new OpenSourceSoftware()
             .AddSoftware("Revit Lookup", "https://github.com/jeremytammik/RevitLookup")
-            .AddLicense("MIT License", "https://github.com/jeremytammik/RevitLookup/blob/dev/License.md")
+            .AddLicense("MIT License", "https://github.com/jeremytammik/RevitLookup/blob/dev/License.md"),
+
+        new OpenSourceSoftware()
+            .AddSoftware("Revit.Async", "https://github.com/KennanChan/Revit.Async")
+            .AddLicense("MIT License", "https://github.com/KennanChan/Revit.Async/blob/master/README.md")
+
+
+
+        
     ];
 }

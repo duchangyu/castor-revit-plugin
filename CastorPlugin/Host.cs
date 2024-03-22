@@ -37,12 +37,14 @@ namespace CastorPlugin
             //App services
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<ISoftwareUpdateService, SoftwareUpdateService>();
+            builder.Services.AddSingleton<IDigService, DigService>();
 
             //UI services
             builder.Services.AddScoped<INavigationService, NavigationService>();
             builder.Services.AddScoped<ISnackbarService, SnackbarService>();
             builder.Services.AddScoped<IContentDialogService, ContentDialogService>();
             builder.Services.AddScoped<NotificationService>();
+
 
             //Views
        

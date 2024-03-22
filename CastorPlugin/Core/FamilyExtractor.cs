@@ -161,9 +161,10 @@ namespace CastorPlugin.Core
             Dictionary<string, object> familyFingerPrintDict = new Dictionary<string, object>();
 
 
-            if (family.IsEditable && !_document.IsReadOnly)
+            if (family.IsEditable)
             {
 
+                // RevitApi.Application.OpenDocumentFile(outputPath); 
                 // Create a new document
                 Document familyDocument = _document.EditFamily(family);
 

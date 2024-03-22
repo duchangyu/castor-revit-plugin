@@ -1,18 +1,16 @@
 ﻿using CastorPlugin.Core;
 using CastorPlugin.Services;
-using CastorPlugin.ViewModels.Contracts;
+using CastorPlugin.Services.Contracts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Nice3point.Revit.Toolkit.External.Handlers;
+using Revit.Async;
 using Wpf.Ui;
 
 namespace CastorPlugin.ViewModels.Pages
 {
     public sealed partial class DigViewModel(
+      IDigService digService,
       INavigationService navigationService,
       NotificationService notificationService,
       IServiceProvider serviceProvider)
@@ -20,14 +18,33 @@ namespace CastorPlugin.ViewModels.Pages
     {
 
 
+      
+
         [RelayCommand]
         public  void Dig()
         {
-             RevitApi.ScanFamilies();
+
+ 
+
+            RevitTask.RunAsync(app =>
+            {
+                try
+                {
+                    digService.Dig();
+                }
+                catch (Exception ex)
+                {
+                    notificationService.ShowError("Exception", ex.Message);
+                }
+            });
+          
+
         }
 
+        public event EventHandler DigEventHandler;
 
-       
+
+    
 
     }
 }

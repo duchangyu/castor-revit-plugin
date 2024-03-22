@@ -4,7 +4,7 @@
         <Assembly>CastorPlugin/CastorPlugin.dll</Assembly>
         <AddInId>CD32C894-82C8-4B14-B393-D497E7CD9EC9</AddInId>
         <FullClassName>CastorPlugin.Application</FullClassName>
-        <VendorId>Development</VendorId>
-        <VendorDescription></VendorDescription>
+        <VendorId>BIMonChain</VendorId>
+        <VendorDescription>毕链科技 www.bimonchain.com</VendorDescription>
     </AddIn>
 </RevitAddIns>
