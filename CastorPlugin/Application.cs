@@ -4,7 +4,8 @@ using Nice3point.Revit.Toolkit.External;
 using Nice3point.Revit.Toolkit.External.Handlers;
 using System.Diagnostics;
 using System.IO;
-
+using Serilog;
+using System.Reflection;
 
 namespace CastorPlugin
 {
@@ -17,6 +18,34 @@ namespace CastorPlugin
 
         public override void OnStartup()
         {
+            try
+            {
+                string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
+                string logFilePath = Path.Combine(assemblyDirectory, "CastorPlugin.log");
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Debug()
+                    .WriteTo.File(logFilePath, 
+                        rollingInterval: RollingInterval.Day, 
+                        shared: true,
+                        flushToDiskInterval: TimeSpan.FromSeconds(1))
+                    .WriteTo.Debug() // This will output to the Debug window
+                    .CreateLogger();
+
+                Log.Information("Application starting up");
+                Log.Information($"Log file path: {logFilePath}");
+
+                // Test if we can write to the log file
+                File.AppendAllText(logFilePath, "Test log entry\n");
+                Log.Information("Successfully wrote to log file");
+            }
+            catch (Exception ex)
+            {
+                // If we can't set up logging, show an error message
+                System.Windows.MessageBox.Show($"Failed to initialize logging: {ex.Message}", "Logging Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+
             // binding revit application
             RevitApi.UiApplication = UiApplication;
 
@@ -34,11 +63,12 @@ namespace CastorPlugin
 
         public override void OnShutdown()
         {
-       
+            Log.Information("Application shutting down");
+            
             SaveSettings();
-
             UpdateSoftware();
-
+            
+            Log.CloseAndFlush();
             Host.Stop();
         }
 
