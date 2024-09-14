@@ -18,33 +18,41 @@ namespace CastorPlugin.ViewModels.Pages
     {
 
 
-      
+        [ObservableProperty]
+        private int assetCount;
+
 
         [RelayCommand]
-        public  void Dig()
+        public async Task DigAsync()
         {
 
  
 
-            RevitTask.RunAsync(app =>
+            var assetCount = await RevitTask.RunAsync<int>(app =>
             {
                 try
                 {
+                    var count =  0;
                     digService.Dig();
+                    return count;
                 }
                 catch (Exception ex)
                 {
                     notificationService.ShowError("Exception", ex.Message);
+                    return 0;
                 }
-            });
-          
+            }); 
+
+
+            this.AssetCount = assetCount;
 
         }
 
-        public event EventHandler DigEventHandler;
 
 
-    
+
+
+
 
     }
 }

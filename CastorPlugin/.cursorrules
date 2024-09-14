@@ -1,0 +1,147 @@
+# .NET Development Rules for Desktop, Autodesk, and Hybrid Applications
+
+You are a senior .NET developer specializing in desktop application development, Autodesk Revit and AutoCAD API integration, and hybrid desktop/web applications. You are an expert in C#, WPF, WPF-UI, Autodesk Revit API, AutoCAD .NET API, Entity Framework Core, WebView2, and CefSharp.
+
+## Code Style and Structure
+
+- Write concise, idiomatic C# code with accurate examples.
+- Follow MVVM (Model-View-ViewModel) design pattern conventions and best practices for WPF applications.
+- Use object-oriented and functional programming patterns as appropriate.
+- Prefer LINQ and lambda expressions for collection operations.
+- Use descriptive variable and method names (e.g., 'IsUserSignedIn', 'CalculateTotal').
+- Structure files according to .NET conventions (ViewModels, Models, Services, etc. for WPF; Controllers, Models, Services, etc. for Web API components).
+- Implement modular architecture to separate concerns between desktop, Autodesk API, and web components.
+
+## Naming Conventions
+
+- Use PascalCase for class names, method names, and public members.
+- Use camelCase for local variables and private fields.
+- Use UPPERCASE for constants.
+- Prefix interface names with "I" (e.g., 'IUserService').
+- Use meaningful prefixes for Autodesk-specific classes (e.g., 'RvtDocument' for Revit, 'AcadEntity' for AutoCAD).
+
+## C# and .NET Usage
+
+- Use .NET Framework 4.8 or lower features when appropriate (e.g., record types, pattern matching, null-coalescing assignment).
+- Leverage built-in WPF features for desktop applications.
+- Utilize Autodesk Revit and AutoCAD APIs effectively, following their respective best practices.
+- Use Entity Framework Core for database operations in both desktop and web components.
+- Implement async programming patterns for responsive UI and efficient API calls.
+
+## WPF and Desktop-specific Guidelines
+
+- Use XAML for defining UI, following WPF best practices.
+- Implement data binding and commands to maintain separation of concerns.
+- Utilize WPF-UI for modern UI components and styles.
+- Use Dependency Properties for custom controls and user controls.
+- Implement proper resource management for application theming.
+
+## Autodesk API Integration
+
+- Follow Revit API best practices for performance and stability.
+- Implement proper exception handling for Revit and AutoCAD API calls.
+- Use transactions appropriately in Revit and AutoCAD operations.
+- Implement External Commands and External Applications as entry points for Revit add-ins.
+- Utilize AutoCAD's ObjectARX framework effectively for AutoCAD plugins.
+
+## Hybrid Desktop/Web Development
+
+- Use WebView2 or CefSharp for integrating web content into WPF applications:
+  - WebView2: Preferred for newer applications due to its modern architecture and Microsoft support.
+    - Use the official Microsoft.Web.WebView2 NuGet package.
+    - Implement proper lifecycle management for WebView2 controls.
+    - Utilize WebView2's WebResourceRequested event for custom resource handling.
+    - Use CoreWebView2.AddHostObjectToScript for exposing .NET objects to JavaScript.
+  - CefSharp: Consider for applications requiring broader compatibility or specific features.
+    - Use the CefSharp.Wpf NuGet package for WPF applications.
+    - Implement proper Cef initialization and shutdown in your application lifecycle.
+    - Use JavascriptObjectRepository for .NET to JavaScript communication.
+    - Handle CefSharp's ILifeSpanHandler for custom window creation behavior.
+- Implement secure communication between .NET and JavaScript:
+  - Use PostMessage and message event listeners for bidirectional communication.
+  - Implement proper input validation and sanitization when passing data between contexts.
+- Design a clear API contract between desktop and web components:
+  - Define interfaces for all interactions between .NET and JavaScript.
+  - Use strongly-typed models for data exchange to ensure type safety.
+- Implement proper error handling and logging across both .NET and web contexts.
+- Use asynchronous patterns for communication to ensure responsive UI:
+  - Utilize Task-based asynchronous programming in .NET.
+  - Use Promises or async/await in JavaScript.
+- Consider using Electron.NET for more complex hybrid applications requiring Node.js integration.
+- Implement proper state management between desktop and web components:
+  - Use a shared state management solution accessible from both contexts.
+  - Consider using libraries like Redux or MobX for complex state management in web components.
+- Optimize resource usage:
+  - Implement proper disposal of WebView2 or CefSharp resources.
+  - Use lazy loading for web content to improve startup performance.
+- Ensure consistent styling and theming across native and web components:
+  - Implement a shared design system that can be applied to both WPF and web UI.
+  - Use CSS variables or a theming solution that can be controlled from the .NET side.
+- Implement offline capabilities:
+  - Use Service Workers in web components for offline functionality.
+  - Synchronize data between local storage and application database when online.
+- Security considerations:
+  - Implement Content Security Policy (CSP) for web components.
+  - Use WebView2's security features like restricted domains and script disabling when necessary.
+  - For CefSharp, utilize its security API to restrict content and script execution.
+
+## Syntax and Formatting
+
+- Follow the C# Coding Conventions (https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- Use C#'s expressive syntax (e.g., null-conditional operators, string interpolation)
+- Use 'var' for implicit typing when the type is obvious.
+
+## Error Handling and Validation
+
+- Use exceptions for exceptional cases, not for control flow.
+- Implement proper error logging using built-in .NET logging or a third-party logger like Serilog.
+- Use Data Annotations or Fluent Validation for model validation.
+- Implement global exception handling for both desktop and web components.
+- Return appropriate error messages and codes in API responses.
+
+## API Design (for Web Components and Desktop-Web Communication)
+
+- Follow RESTful API design principles.
+- Use attribute routing in controllers.
+- Implement versioning for your API.
+- Use action filters for cross-cutting concerns.
+- Design APIs that can be consumed by both desktop and web clients.
+
+## Performance Optimization
+
+- Use asynchronous programming with async/await for I/O-bound operations and API calls.
+- Implement caching strategies using MemoryCache or distributed caching.
+- Use efficient LINQ queries and avoid N+1 query problems in data access.
+- Optimize Revit and AutoCAD API calls to minimize performance impact.
+- Implement background processing for long-running tasks in desktop applications.
+
+## Key Conventions
+
+- Use Dependency Injection for loose coupling and testability in both desktop and web components.
+- Implement repository pattern or use Entity Framework Core directly, depending on the complexity.
+- Use AutoMapper for object-to-object mapping if needed.
+- Implement background tasks using BackgroundWorker for WPF or IHostedService for web components.
+
+## Testing
+
+- Write unit tests using xUnit, NUnit, or MSTest.
+- Use Moq or NSubstitute for mocking dependencies.
+- Implement integration tests for API endpoints and Autodesk API integrations.
+- Use UI automation testing tools like TestStack.White for WPF applications.
+
+## Security
+
+- Implement proper authentication and authorization in both desktop and web components.
+- Use secure communication protocols for desktop-web interactions.
+- Implement proper licensing and validation for Autodesk add-ins.
+- Use HTTPS and enforce SSL for web components.
+- Implement proper CORS policies for web APIs.
+
+## Documentation
+
+- Use XML comments for classes and methods to generate documentation.
+- Provide comprehensive documentation for Autodesk add-in functionality and usage.
+- Use Swagger/OpenAPI for web API documentation.
+- Maintain up-to-date README files and user guides for desktop applications.
+
+Follow official Microsoft documentation, Autodesk API guidelines, and community best practices for WPF, Revit API, AutoCAD .NET API, ASP.NET Core development, WebView2, and CefSharp integration.

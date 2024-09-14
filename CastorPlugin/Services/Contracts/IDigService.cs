@@ -3,7 +3,7 @@
     public interface IDigService
     {
 
-        public void Dig();
+        public  Task Dig();
 
     }
 }

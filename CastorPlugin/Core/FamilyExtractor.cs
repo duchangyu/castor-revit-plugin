@@ -1,7 +1,5 @@
-﻿
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using CastorPlugin.Utils;
-using Newtonsoft.Json;
 using Nice3point.Revit.Extensions;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +9,12 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using static System.Net.Mime.MediaTypeNames;
+using Microsoft.Extensions.Configuration;
+using CastorPlugin.Services.DTO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Linq;
 
 namespace CastorPlugin.Core
 {
@@ -22,124 +26,161 @@ namespace CastorPlugin.Core
     {
 
         private readonly Document _document;
+        private readonly IConfiguration _configuration;
 
-        public FamilyExtractor(Document document)
+        public FamilyExtractor(Document document, IConfiguration configuration)
         {
             _document = document;
+            _configuration = configuration;
         }
 
-        public void ExtractFamilies()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns> family counts</returns>
+        public async Task<int> ExtractFamilies()
         {
+            int count = 0;
+
             FilteredElementCollector collector = new FilteredElementCollector(_document).OfClass(typeof(Family));
-            // List<FamilyInstance> list = collector.ToList<FamilyInstance>();
-            //int count = list.Count, exported = 0;
 
-
-            // 获取族类型
-            FilteredElementCollector familySymbolCollector = new FilteredElementCollector(_document)
-                .OfClass(typeof(FamilySymbol));
-
-            //foreach (FamilySymbol familySymbol in familySymbolCollector)
-            //{
-            //    if(familySymbol != null)
-            //    {
-            //        // 获取族预览图片
-            //        ExtractFamilySymbolPreviewThumbnail(familySymbol);
-
-
-            //        // 通过FamilySymbol获取Family对象
-            //        Family family = familySymbol.Family;
-            //        if (family != null)
-            //        {
-            //            // 现在我们可以使用family对象了
-            //            // ... 进行操作 ...
-            //            string str = GetFamilyFingerprintInJson(family);
-
-
-            //        }
-
-            //    }
-            //}
-
-
-
+            // List of common family categories to exclude
+            HashSet<BuiltInCategory> commonCategories = new HashSet<BuiltInCategory>
+            {
+                BuiltInCategory.OST_Walls,
+                BuiltInCategory.OST_Floors,
+                BuiltInCategory.OST_Roofs,
+                BuiltInCategory.OST_Columns,
+                BuiltInCategory.OST_CurtainWallPanels,
+                BuiltInCategory.OST_CurtainWallMullions,
+                BuiltInCategory.OST_Doors,
+                BuiltInCategory.OST_Windows,
+                BuiltInCategory.OST_Railings,
+                BuiltInCategory.OST_Stairs,
+                BuiltInCategory.OST_Ramps,
+                BuiltInCategory.OST_ShaftOpening,
+                BuiltInCategory.OST_Ceilings
+                // Add more common family categories as needed
+            };
 
             foreach (Family family in collector)
             {
-
-                if (family.IsEditable)
+                // Check if the family is editable and not in the list of common categories
+                if (family.IsEditable && !commonCategories.Contains((BuiltInCategory)family.FamilyCategory.Id.IntegerValue))
                 {
+                    // Additional check: Ignore families without symbols (types)
+                    if (family.GetFamilySymbolIds().Count > 0)
+                    {
+                        string str = GetFamilyFingerprintInJson(family);
 
-                    string str = GetFamilyFingerprintInJson(family);
+                        Log.Information(str);
 
-                    Log.Information(str);
+                        // Create a nft candidate object 
+                        NftWorksCandidates nftCandidate = new NftWorksCandidates
+                        {
+                            Name = family.Name,
+                            Type = 1, // REVIT Family
+                            FingerPrintHash = ConvertToSha256(str),
+                            FingerPrintInJson = str, // Assign the JSON fingerprint
+                            Thumbnail = GetFamilyThumbnail(family)
+                        };
 
-                    //TODO: convert fingerprint json to MD5 or sha256 hash code
+                        await PostToServerAsCandidate(nftCandidate);
 
-                    //TODO: post to server, and register as occupoied.
-
-
+                        count++;
+                    }
                 }
-
             }
 
-
+            return count;
         }
 
-        private bool ExtractFamilySymbolPreviewThumbnail(FamilySymbol familySymbol)
+        private string GetFamilyThumbnail(Family family)
         {
-    
+            foreach (ElementId symbolId in family.GetFamilySymbolIds())
+            {
+                FamilySymbol symbol = _document.GetElement(symbolId) as FamilySymbol;
+                if (symbol != null)
+                {
+                    string thumbnail = ExtractFamilySymbolPreviewThumbnail(symbol);
+                    if (!string.IsNullOrEmpty(thumbnail))
+                    {
+                        return thumbnail; // Return the first valid thumbnail found
+                    }
+                }
+            }
+
+            Log.Warning($"No valid thumbnail found for family: {family.Name}");
+            return string.Empty;
+        }
+
+        private static async Task PostToServerAsCandidate(NftWorksCandidates nftCandidate)
+        {
+            // Post the nftCandidate object to server
+            try
+            {
+                string apiUrl = @"http://macbook-pro:3000" + @"/nft-works-candidates"; //_configuration.GetValue<string>("ApiUrl"); // Get API URL from configuration
+                string response = await WebServiceBroker.SendPostRequestAsync(apiUrl, nftCandidate);
+
+                if (!string.IsNullOrEmpty(response))
+                {
+                    // Deserialize the response string to NftWorksCandidates object using System.Text.Json
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Add this if your JSON properties use camelCase
+                       
+
+                    };
+                    var createdCandidate = JsonSerializer.Deserialize<NftWorksCandidates>(response, options);
+
+                    if (createdCandidate != null && !string.IsNullOrEmpty(createdCandidate.FingerPrintHash))
+                    {
+                        Log.Information($"NFT Works Candidate created successfully. ID: {createdCandidate.FingerPrintHash}");
+                    }
+                    else
+                    {
+                        Log.Warning("Failed to parse the server response.");
+                    }
+                }
+                else
+                {
+                    Log.Error("Failed to create NFT Works Candidate. No response from server.");
+                }
+            }
+            catch (JsonException ex)
+            {
+                Log.Error($"Error deserializing JSON response: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error posting NFT Works Candidate to server: {ex.Message}");
+            }
+        }
+
+        private string ExtractFamilySymbolPreviewThumbnail(FamilySymbol familySymbol)
+        {
             System.Drawing.Size size = new System.Drawing.Size(200, 200);
-           
             Bitmap image = familySymbol.GetPreviewImage(size);
 
-           
-
-            if(image != null)
+            // Convert the bitmap to base64 string
+            if (image != null)
             {
-
-                OpenRevitOleStorage.Tool.ImageToBase64(image);
-
-                // encode image to jpeg for test display purposes:
-
-                JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-
-                encoder.Frames.Add(BitmapFrame.Create(
-                    ConvertBitmapToBitmapSource(image))
-                    );
-
-                encoder.QualityLevel = 25;
-
-                // for debug, save to file and open it 
-                // Create a temporary folder within the current assembly directory
-                string tempFolder = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "TempFolder");
-
-                // Create the folder if it doesn't exist
-                if (!Directory.Exists(tempFolder))
-                {
-                    Directory.CreateDirectory(tempFolder);
-                }
-
-                string filename = Util.MakeValidFileName(familySymbol.Name);
-                string familyPreviewFilename = Path.Combine(tempFolder, $"{filename}.jpg");
-
-                FileStream file = new FileStream(familyPreviewFilename, FileMode.Create, FileAccess.Write);
-
-                encoder.Save(file);
-                file.Close();
-
-                Process.Start(familyPreviewFilename); // test display
-
-                return true;
-
+                return ImageToBase64(image);
             }
             else
             {
-                return false;
+                return string.Empty;
             }
+        }
 
-           
-           
+        private string ImageToBase64(Bitmap image)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                byte[] imageBytes = ms.ToArray();
+                return Convert.ToBase64String(imageBytes);
+            }
         }
 
         private string GetFamilyFingerprintInJson(Family family)
@@ -175,7 +216,7 @@ namespace CastorPlugin.Core
                     familyFingerPrintDict = ExtractFamilyParameters(familyDocument);
 
                     //convert to json string
-                    familyFingerprintInJson = JsonConvert.SerializeObject(familyFingerPrintDict);
+                    familyFingerprintInJson = JsonSerializer.Serialize(familyFingerPrintDict);
                     Debug.Print(familyFingerprintInJson);
 
 
@@ -219,9 +260,9 @@ namespace CastorPlugin.Core
                 {
                     FamilySymbol symbol = _document.GetElement(symbolId) as FamilySymbol;
 
-                    bool hasPreviewImage = ExtractFamilySymbolPreviewThumbnail(symbol);
+                    // bool hasPreviewImage = ExtractFamilySymbolPreviewThumbnail(symbol);
                     //get only one
-                    if (hasPreviewImage) break;
+                   //  if (hasPreviewImage) break;
 
 
 
@@ -418,6 +459,22 @@ namespace CastorPlugin.Core
         private static string RealString(double a)
         {
             return a.ToString("0.##");
+        }
+
+        private string ConvertToSha256(string input)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+                byte[] hashBytes = sha256.ComputeHash(inputBytes);
+                
+                StringBuilder builder = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    builder.Append(hashBytes[i].ToString("x2"));
+                }
+                return builder.ToString();
+            }
         }
 
     }

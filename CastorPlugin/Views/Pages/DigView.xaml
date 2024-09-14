@@ -15,16 +15,32 @@
   <DockPanel Margin="12" LastChildFill="True">
 
 
+
+
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+      <Button
+        x:Name="startBtn"
+        HorizontalAlignment="Center"
+        Command="{Binding ViewModel.DigCommand}"
+        Content="开始挖宝" />
+      <Label
+        x:Name="statusLabel"
+        VerticalAlignment="Center"
+        Content="名花有主：" />
+      <ProgressBar
+        x:Name="progressBar"
+        Width="200"
+        Height="30"
+        Maximum="100"
+        Value="50" />
       <Button
         Name="btnDig"
         Command="{Binding ViewModel.DigCommand}"
         Content="Dig"
         DockPanel.Dock="Top" />
-      <Button
-        Name="btnDigTest"
-        Click="btnDigTest_Click"
-        Content="DigDirectly" />
+
+      <TextBox Text="共挖到宝贝：" />
+      <TextBlock x:Name="AssetCount" Text="{Binding ViewModel.AssetCount}" />
       <TextBox
         Name="addressBar"
         DockPanel.Dock="Top"
@@ -60,6 +76,7 @@
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch"
       Source="https://www.baidu.com" />
+    <rl:BreadcrumbBarItem Content="BreadcrumbBarItem" Width="0"/>
 
 
 

@@ -1,11 +1,8 @@
 
 
 using Autodesk.Revit.Attributes;
-using Autodesk.Revit.UI;
 using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
-using CastorPlugin.Utils;
-using CastorPlugin.Views;
 using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
 using Revit.Async;

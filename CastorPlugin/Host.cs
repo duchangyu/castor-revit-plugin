@@ -38,6 +38,7 @@ namespace CastorPlugin
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<ISoftwareUpdateService, SoftwareUpdateService>();
             builder.Services.AddSingleton<IDigService, DigService>();
+         
 
             //UI services
             builder.Services.AddScoped<INavigationService, NavigationService>();
