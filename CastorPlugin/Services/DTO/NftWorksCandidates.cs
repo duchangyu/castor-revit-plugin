@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CastorPlugin.Services.DTO
 {
-    internal class NftWorksCandidates
+    public class NftWorksCandidates
     {
         public string Name { get; set; } // 资产名称
 
