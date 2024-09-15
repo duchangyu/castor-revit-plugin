@@ -19,10 +19,12 @@ namespace CastorPlugin.Core
         // Public properties
         public string AssetType { get; } = "RevitFamily";
         public string AssetName { get; private set; }
-        public Dictionary<string, Dictionary<string, string>> Types { get; } = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, Dictionary<string, string>> ParameterCharacteristics { get; } = new Dictionary<string, Dictionary<string, string>>();
         public string Thumbnail { get; private set; }
         public string FingerPrintHash { get; private set; }
         public string FingerPrintInJson { get; private set; }
+        public Dictionary<string, Dictionary<string, object>> GeometryCharacteristics { get; } = new Dictionary<string, Dictionary<string, object>>();
+
 
         // Private fields
         private readonly Document _document;
@@ -55,7 +57,7 @@ namespace CastorPlugin.Core
         }
 
         /// <summary>
-        /// Extracts all relevant data from a given family.
+        /// Extracts all relevant data from a given family, including geometry characteristics.
         /// </summary>
         /// <param name="family">The family to process.</param>
         private void ExtractFamilyData(Family family)
@@ -63,6 +65,7 @@ namespace CastorPlugin.Core
             AssetName = family.Name;
             ExtractFamilyParameters(family);
             ExtractThumbnail(family);
+            ExtractGeometryCharacteristics(family);
             GenerateFingerPrintJson();
             GenerateFingerPrintHash();
         }
@@ -303,11 +306,11 @@ namespace CastorPlugin.Core
         /// <param name="value">The value of the parameter.</param>
         public void AddTypeParameter(string typeName, string parameterName, string value)
         {
-            if (!Types.ContainsKey(typeName))
+            if (!ParameterCharacteristics.ContainsKey(typeName))
             {
-                Types[typeName] = new Dictionary<string, string>();
+                ParameterCharacteristics[typeName] = new Dictionary<string, string>();
             }
-            Types[typeName][parameterName] = value;
+            ParameterCharacteristics[typeName][parameterName] = value;
         }
 
         /// <summary>
@@ -322,7 +325,8 @@ namespace CastorPlugin.Core
                 {
                     ["AssetType"] = AssetType,
                     ["AssetName"] = AssetName,
-                    ["v1"] = Types
+                    ["ParameterCharacteristics"] = ParameterCharacteristics,
+                    ["GeometryCharacteristics"] = GeometryCharacteristics
                 }
             };
 
@@ -366,11 +370,6 @@ namespace CastorPlugin.Core
             return node;
         }
 
-        // You can add geometry-related methods here in the future
-        public void AddGeometryCharacteristics(/* parameters for geometry data */)
-        {
-            // Implement logic to add geometry characteristics
-        }
 
         /// <summary>
         /// Determines whether a family should be processed based on certain criteria.
@@ -427,5 +426,176 @@ namespace CastorPlugin.Core
                 }
             }
         }
+
+        /// <summary>
+        /// Extracts geometry characteristics from a family.
+        /// </summary>
+        /// <param name="family">The family to extract geometry from.</param>
+        private void ExtractGeometryCharacteristics(Family family)
+        {
+            foreach (ElementId symbolId in family.GetFamilySymbolIds())
+            {
+                FamilySymbol symbol = _document.GetElement(symbolId) as FamilySymbol;
+                if (symbol != null)
+                {
+                    try
+                    {
+                        // Try to get geometry
+                        GeometryElement geomElem = null;
+                        try
+                        {
+                            geomElem = symbol.get_Geometry(
+                                new Options {
+                                    ComputeReferences = true, 
+                                    DetailLevel = ViewDetailLevel.Fine,
+                                    IncludeNonVisibleObjects = false});
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning($"Unable to get geometry for symbol '{symbol.Name}': {ex.Message}");
+                        }
+
+                        // If we successfully got geometry, extract the data
+                        if (geomElem != null)
+                        {
+                            var geometryData = new Dictionary<string, object>();
+                            ExtractGeometryData(symbol.Name, geomElem, geometryData);
+
+                            // Only add to GeometryCharacteristics if we extracted some data
+                            if (geometryData.Count > 0)
+                            {
+                                GeometryCharacteristics[symbol.Name] = geometryData;
+                            }
+                        }
+                        else
+                        {
+                            Log.Information($"No geometry data available for symbol '{symbol.Name}'. Skipping geometry extraction.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error($"Error processing symbol '{symbol.Name}': {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        private void ExtractGeometryData(string symbolName, GeometryElement geomElem, Dictionary<string, object> geometryData)
+        {
+            try
+            {
+                geometryData["BoundingBox"] = ExtractBoundingBoxData(geomElem.GetBoundingBox());
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error extracting BoundingBox for symbol '{symbolName}': {ex.Message}");
+            }
+
+            try
+            {
+                geometryData["SurfaceArea"] = CalculateSurfaceArea(geomElem);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error calculating SurfaceArea for symbol '{symbolName}': {ex.Message}");
+            }
+
+            try
+            {
+                geometryData["Volume"] = CalculateVolume(geomElem);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error calculating Volume for symbol '{symbolName}': {ex.Message}");
+            }
+
+            try
+            {
+                geometryData["FaceCount"] = CountFaces(geomElem);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error counting Faces for symbol '{symbolName}': {ex.Message}");
+            }
+
+            try
+            {
+                geometryData["VertexCount"] = CountVertices(geomElem);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error counting Vertices for symbol '{symbolName}': {ex.Message}");
+            }
+        }
+
+        private Dictionary<string, double> ExtractBoundingBoxData(BoundingBoxXYZ boundingBox)
+        {
+            return new Dictionary<string, double>
+            {
+                ["Width"] = Math.Abs(boundingBox.Max.X - boundingBox.Min.X),
+                ["Depth"] = Math.Abs(boundingBox.Max.Y - boundingBox.Min.Y),
+                ["Height"] = Math.Abs(boundingBox.Max.Z - boundingBox.Min.Z)
+            };
+        }
+
+        private double CalculateSurfaceArea(GeometryElement geomElem)
+        {
+            double surfaceArea = 0;
+            foreach (GeometryObject geomObj in geomElem)
+            {
+                if (geomObj is Solid solid)
+                {
+                    foreach (Face face in solid.Faces)
+                    {
+                        surfaceArea += face.Area;
+                    }
+                }
+            }
+            return surfaceArea;
+        }
+
+        private double CalculateVolume(GeometryElement geomElem)
+        {
+            double volume = 0;
+            foreach (GeometryObject geomObj in geomElem)
+            {
+                if (geomObj is Solid solid)
+                {
+                    volume += solid.Volume;
+                }
+            }
+            return volume;
+        }
+
+        private int CountFaces(GeometryElement geomElem)
+        {
+            int faceCount = 0;
+            foreach (GeometryObject geomObj in geomElem)
+            {
+                if (geomObj is Solid solid)
+                {
+                    faceCount += solid.Faces.Size;
+                }
+            }
+            return faceCount;
+        }
+
+        private int CountVertices(GeometryElement geomElem)
+        {
+            HashSet<XYZ> uniqueVertices = new HashSet<XYZ>();
+            foreach (GeometryObject geomObj in geomElem)
+            {
+                if (geomObj is Solid solid)
+                {
+                    foreach (Edge edge in solid.Edges)
+                    {
+                        uniqueVertices.Add(edge.Tessellate()[0]);
+                        uniqueVertices.Add(edge.Tessellate()[1]);
+                    }
+                }
+            }
+            return uniqueVertices.Count;
+        }
+
     }
 }
