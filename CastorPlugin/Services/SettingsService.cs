@@ -27,6 +27,7 @@ namespace CastorPlugin.Services
         [JsonPropertyName("UseSizeRestoring")] public bool UseSizeRestoring { get; set; }
         [JsonPropertyName("WindowWidth")] public double WindowWidth { get; set; }
         [JsonPropertyName("WindowHeight")] public double WindowHeight { get; set; }
+        [JsonPropertyName("ApiUrl")] public string ApiUrl {get;set;}
         //[JsonPropertyName("IsUnsupportedAllowed")] public bool IncludeUnsupported { get; set; }
         //[JsonPropertyName("IsPrivateAllowed")] public bool IncludePrivate { get; set; }
         //[JsonPropertyName("IsStaticAllowed")] public bool IncludeStatic { get; set; }
@@ -88,6 +89,12 @@ namespace CastorPlugin.Services
         {
             get => _settings.WindowHeight;
             set => _settings.WindowHeight = value;
+        }
+
+        public string ApiUrl
+        {
+            get => _settings.ApiUrl;
+            set => _settings.ApiUrl = value;
         }
    
         public int ApplyTransition(bool value)

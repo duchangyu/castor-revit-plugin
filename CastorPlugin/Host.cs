@@ -5,6 +5,7 @@ using CastorPlugin.ViewModels.Contracts;
 using CastorPlugin.ViewModels.Pages;
 using CastorPlugin.Views;
 using CastorPlugin.Views.Pages;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,11 @@ namespace CastorPlugin
 
             //Configuration
             builder.Configuration.AddFoldersConfiguration();
+
+            // Add Settings.cfg
+            var configFolder = builder.Configuration.GetValue<string>("ConfigFolder");
+            var settingsPath = Path.Combine(configFolder, "Settings.cfg");
+            builder.Configuration.AddJsonFile(settingsPath, optional: true, reloadOnChange: true);
 
             //App services
             builder.Services.AddSingleton<ISettingsService, SettingsService>();

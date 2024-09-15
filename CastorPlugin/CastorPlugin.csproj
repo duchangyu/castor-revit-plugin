@@ -113,10 +113,22 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Config\Settings.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Target Name="CopyFiles" AfterTargets="CoreBuild">
     <ItemGroup>
       <RootItem Include="$(ProjectDir)*.addin" />
       <AddinItem Include="$(TargetDir)*" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Config\Settings.cfg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <PropertyGroup>
@@ -148,4 +160,6 @@
     <RemoveDir Directories="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)" />
     <Delete Files="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName).addin" />
   </Target>
+
+
 </Project>
