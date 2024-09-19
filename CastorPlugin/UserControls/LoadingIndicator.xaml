@@ -1,0 +1,140 @@
+<UserControl
+  x:Class="CastorPlugin.UserControls.LoadingIndicator"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:converters="clr-namespace:CastorPlugin.ViewModels.Converters"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  d:DesignHeight="600"
+  d:DesignWidth="800"
+  mc:Ignorable="d">
+
+  <UserControl.Resources>
+    <converters:ShovelWidthConverter x:Key="ShovelWidthConverter" />
+    <converters:ShovelHeightConverter x:Key="ShovelHeightConverter" />
+
+    <!--  Rotation Storyboard for Tool Image  -->
+    <Storyboard x:Key="ToolRotateStoryboard" RepeatBehavior="Forever">
+      <DoubleAnimation
+        AutoReverse="True"
+        Storyboard.TargetName="ToolRotateTransform"
+        Storyboard.TargetProperty="Angle"
+        From="-45"
+        To="45"
+        Duration="0:0:1">
+        <DoubleAnimation.EasingFunction>
+          <SineEase EasingMode="EaseInOut" />
+        </DoubleAnimation.EasingFunction>
+      </DoubleAnimation>
+    </Storyboard>
+
+    <!--  Translation Storyboard for Tool Image  -->
+    <Storyboard x:Key="ToolTranslateStoryboard" RepeatBehavior="Forever">
+      <DoubleAnimation
+        AutoReverse="True"
+        Storyboard.TargetName="ToolTranslateTransform"
+        Storyboard.TargetProperty="Y"
+        From="0"
+        To="10"
+        Duration="0:0:1">
+        <DoubleAnimation.EasingFunction>
+          <SineEase EasingMode="EaseInOut" />
+        </DoubleAnimation.EasingFunction>
+      </DoubleAnimation>
+    </Storyboard>
+
+    <!--  Scaling Storyboard for Tool Image  -->
+    <Storyboard x:Key="ToolScaleStoryboard" RepeatBehavior="Forever">
+      <DoubleAnimation
+        AutoReverse="True"
+        Storyboard.TargetName="ToolScaleTransform"
+        Storyboard.TargetProperty="ScaleX"
+        From="1.0"
+        To="1.2"
+        Duration="0:0:1" />
+      <DoubleAnimation
+        AutoReverse="True"
+        Storyboard.TargetName="ToolScaleTransform"
+        Storyboard.TargetProperty="ScaleY"
+        From="1.0"
+        To="1.2"
+        Duration="0:0:1" />
+    </Storyboard>
+
+    <!--  Opacity Storyboard for Tool Image (Optional)  -->
+    <!--<Storyboard x:Key="ToolOpacityStoryboard" RepeatBehavior="Forever">
+      <DoubleAnimation
+        Storyboard.TargetName="ToolImage"
+        Storyboard.TargetProperty="Opacity"
+        From="0.8"
+        To="1.0"
+        Duration="0:0:1"
+        AutoReverse="True" />
+    </Storyboard>-->
+  </UserControl.Resources>
+
+  <Grid Background="Transparent">
+    <!--  Base Digging Image  -->
+    <Image
+      x:Name="BaseImage"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Center"
+      RenderOptions.BitmapScalingMode="HighQuality"
+      Source="pack://application:,,,/CastorPlugin;component/Resources/Images/base-digging.png"
+      Stretch="Uniform">
+      <Image.Effect>
+        <DropShadowEffect
+          BlurRadius="10"
+          ShadowDepth="5"
+          Color="Black" />
+      </Image.Effect>
+    </Image>
+
+    <!--  Shovel or Tool Overlay  -->
+    <Image
+      x:Name="ToolImage"
+      Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource ShovelWidthConverter}}"
+      Height="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Grid}, Converter={StaticResource ShovelHeightConverter}}"
+      Margin="303,304,0,0"
+      HorizontalAlignment="Left"
+      VerticalAlignment="Top"
+      Opacity="0.8"
+      RenderOptions.BitmapScalingMode="HighQuality"
+      RenderTransformOrigin="1,1"
+      Source="pack://application:,,,/CastorPlugin;component/Resources/Images/shovel.png">
+      <!--  Pivot at center  -->
+      <Image.RenderTransform>
+        <TransformGroup>
+          <RotateTransform x:Name="ToolRotateTransform" Angle="-45" />
+          <TranslateTransform x:Name="ToolTranslateTransform" Y="0" />
+          <ScaleTransform x:Name="ToolScaleTransform" ScaleX="1" ScaleY="1" />
+        </TransformGroup>
+      </Image.RenderTransform>
+      <Image.Effect>
+        <DropShadowEffect
+          BlurRadius="5"
+          ShadowDepth="2"
+          Color="Black" />
+      </Image.Effect>
+    </Image>
+
+    <!--  Loading Text  -->
+    <TextBlock
+      Margin="0,10,0,10"
+      HorizontalAlignment="Center"
+      VerticalAlignment="Bottom"
+      FontSize="24"
+      FontWeight="Bold"
+      Foreground="White"
+      Text="Digging..." />
+  </Grid>
+
+  <UserControl.Triggers>
+    <EventTrigger RoutedEvent="UserControl.Loaded">
+      <BeginStoryboard Storyboard="{StaticResource ToolRotateStoryboard}" />
+      <BeginStoryboard Storyboard="{StaticResource ToolTranslateStoryboard}" />
+      <BeginStoryboard Storyboard="{StaticResource ToolScaleStoryboard}" />
+      <!--<BeginStoryboard Storyboard="{StaticResource ToolOpacityStoryboard}" />-->
+    </EventTrigger>
+  </UserControl.Triggers>
+</UserControl>

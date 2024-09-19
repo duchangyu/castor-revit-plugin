@@ -4,26 +4,22 @@ using Microsoft.Web.WebView2.Core;
 using System.IO;
 using System.Windows;
 using Wpf.Ui.Controls;
+using System.Windows.Controls;
 
 namespace CastorPlugin.Views.Pages
 {
     /// <summary>
     /// DigView.xaml 的交互逻辑
     /// </summary>
-    public partial class DigView : INavigableView<DigViewModel>
+    public partial class DigView : Page
     {
 
-        public DigView(DigViewModel digViewModel)
+        public DigView(DigViewModel viewModel)
         {
-  
-            ViewModel = digViewModel;
             InitializeComponent();
-            InitWebView2Env();
+            ViewModel = viewModel;
             DataContext = this;
-
         }
-
-
 
         public DigViewModel ViewModel { get; }
 

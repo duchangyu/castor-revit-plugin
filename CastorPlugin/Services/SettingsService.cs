@@ -1,8 +1,9 @@
-﻿
-using Autodesk.Internal.InfoCenter;
+﻿using Autodesk.Internal.InfoCenter;
 using CastorPlugin.Services.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System;
+using System.ComponentModel; // Add this line
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
@@ -38,7 +39,7 @@ namespace CastorPlugin.Services
         //[JsonPropertyName("IsModifyTabAllowed")] public bool UseModifyTab { get; set; }
     }
 
-    public sealed class SettingsService : ISettingsService
+    public sealed class SettingsService : ISettingsService, INotifyPropertyChanged // Implement INotifyPropertyChanged
     {
         private const int DefaultTransitionDuration = 200;
         private readonly Settings _settings;
@@ -53,7 +54,26 @@ namespace CastorPlugin.Services
 
         }
 
+        private bool _isLoading;
+        public bool IsLoading
+        {
+            get => _isLoading;
+            set
+            {
+                if (_isLoading != value)
+                {
+                    _isLoading = value;
+                    OnPropertyChanged(nameof(IsLoading));
+                }
+            }
+        }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public ApplicationTheme Theme
         {
