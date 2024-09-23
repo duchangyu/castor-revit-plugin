@@ -40,6 +40,11 @@ namespace CastorPlugin
             var settingsPath = Path.Combine(configFolder, "Settings.cfg");
             builder.Configuration.AddJsonFile(settingsPath, optional: true, reloadOnChange: true);
 
+            // Add diagnostic logging
+            Console.WriteLine($"Config folder: {configFolder}");
+            Console.WriteLine($"Settings path: {settingsPath}");
+            Console.WriteLine($"Settings file exists: {File.Exists(settingsPath)}");
+
             //App services
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<ISoftwareUpdateService, SoftwareUpdateService>();
@@ -73,6 +78,11 @@ namespace CastorPlugin
             _host = builder.Build();
             _host.Start();
 
+            WebServiceBroker.Initialize(_host.Services.GetRequiredService<ISettingsService>());
+
+            // Add this diagnostic code
+            var settingsService = _host.Services.GetRequiredService<ISettingsService>();
+            Console.WriteLine($"ApiUrl from SettingsService: {settingsService.ApiUrl}");
         }
 
 

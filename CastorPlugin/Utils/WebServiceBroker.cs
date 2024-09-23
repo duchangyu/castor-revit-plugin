@@ -6,22 +6,34 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using CastorPlugin.Services.Contracts;
 
 public class WebServiceBroker
 {
     private static readonly HttpClient client = new HttpClient();
+    private static ISettingsService _settingsService;
 
-    static WebServiceBroker()
+    public static void Initialize(ISettingsService settingsService)
     {
+        _settingsService = settingsService;
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        
+        Console.WriteLine($"Initializing WebServiceBroker with ApiUrl: {_settingsService.ApiUrl}");
+        
+        if (string.IsNullOrEmpty(_settingsService.ApiUrl))
+        {
+            throw new InvalidOperationException("ApiUrl is not set in the settings.");
+        }
+        
+        client.BaseAddress = new Uri(_settingsService.ApiUrl);
     }
 
-    public static async Task<string> SendGetRequestAsync(string url, CancellationToken cancellationToken = default)
+    public static async Task<string> SendGetRequestAsync(string endpoint, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await client.GetAsync(url, cancellationToken);
-            response.EnsureSuccessStatusCode(); // Throws if not successful
+            var response = await client.GetAsync(endpoint, cancellationToken);
+            response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
         }
         catch (HttpRequestException ex)
@@ -31,7 +43,7 @@ public class WebServiceBroker
         }
     }
 
-    public static async Task<string> SendPostRequestAsync(string url, object data, CancellationToken cancellationToken = default)
+    public static async Task<string> SendPostRequestAsync(string endpoint, object data, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -40,10 +52,10 @@ public class WebServiceBroker
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            var json = JsonSerializer.Serialize(data,options);
+            var json = JsonSerializer.Serialize(data, options);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(url, content, cancellationToken);
-            response.EnsureSuccessStatusCode(); // Throws if not successful
+            var response = await client.PostAsync(endpoint, content, cancellationToken);
+            response.EnsureSuccessStatusCode();
             return await response.Content.ReadAsStringAsync();
         }
         catch (HttpRequestException ex)
@@ -51,5 +63,10 @@ public class WebServiceBroker
             Console.WriteLine($"Request error: {ex.Message}");
             return null;
         }
+    }
+
+    public static string GetFullUrl(string endpoint)
+    {
+        return new Uri(client.BaseAddress, endpoint).ToString();
     }
 }

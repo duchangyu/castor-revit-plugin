@@ -1,9 +1,10 @@
-﻿namespace CastorPlugin.Services.Contracts
+﻿
+namespace CastorPlugin.Services.Contracts
 {
     public interface IDigService
     {
+        Action CandidatePosted { get; set; }
 
-        public  Task Dig();
-
+        Task Dig(CancellationToken cancellationToken);
     }
 }

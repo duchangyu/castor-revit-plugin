@@ -18,34 +18,31 @@ namespace CastorPlugin.Views.Pages
         {
             InitializeComponent();
             ViewModel = viewModel;
-            DataContext = this;
+            DataContext = viewModel;
+
+            // Initialize WebView2 when the page is loaded
+            Loaded += DigView_Loaded;
         }
 
         public DigViewModel ViewModel { get; }
 
-        private async void InitWebView2Env()
+        private async void DigView_Loaded(object sender, RoutedEventArgs e)
         {
-            if (webView != null)
-            {
-
-                if (webView.CoreWebView2 == null)
-                {
-
-                    string tempPath = Path.GetTempPath();
-
-                    var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
-                    await webView.EnsureCoreWebView2Async(env);
-
-                    webView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
-                   
-
-                }
-
-
-                
-            }
+            await InitializeWebView2();
+            await ViewModel.FetchCandidateCountAsync();
         }
 
+        private async Task InitializeWebView2()
+        {
+            if (webView != null && webView.CoreWebView2 == null)
+            {
+                string tempPath = Path.GetTempPath();
+                var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
+                await webView.EnsureCoreWebView2Async(env);
+
+                webView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+            }
+        }
 
         private void CoreWebView2_NewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
         {
@@ -55,20 +52,20 @@ namespace CastorPlugin.Views.Pages
 
         private  void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (webView != null)
-            {
+            //if (webView != null)
+            //{
 
-                if (webView.CoreWebView2 != null)
-                {
+            //    if (webView.CoreWebView2 != null)
+            //    {
 
-                    webView.CoreWebView2.Navigate(addressBar.Text);
-                }
-                else
-                {
-                    webView.Source = new Uri(addressBar.Text);
-                    //MessageBox.Show("not ready yet");
-                }
-            }
+            //        webView.CoreWebView2.Navigate(addressBar.Text);
+            //    }
+            //    else
+            //    {
+            //        webView.Source = new Uri(addressBar.Text);
+            //        //MessageBox.Show("not ready yet");
+            //    }
+            //}
 
         }
 

@@ -59,7 +59,9 @@
     <ApplicationDefinition Remove="App.xaml" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Config\Settings.cfg" />
     <None Remove="Resources\Images\AboutLogo200.png" />
+    <None Remove="Resources\Images\aliPayRecQR.png" />
     <None Remove="Resources\Images\base-digging.png" />
     <None Remove="Resources\Images\dig-sucess.png" />
     <None Remove="Resources\Images\loading-animation.png" />
@@ -67,7 +69,13 @@
     <None Remove="Resources\Images\RibbonIcon32.png" />
     <None Remove="Resources\Images\ShellIcon.ico" />
     <None Remove="Resources\Images\shovel.png" />
+    <None Remove="Resources\Images\wechatPayRecQR.png" />
     <None Remove="Services\DTO\UpdateResponse-example.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config\Settings.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -100,6 +108,7 @@
     <Resource Include="Resources\Icons\RibbonIcon16.png" />
     <Resource Include="Resources\Icons\RibbonIcon32.png" />
     <Resource Include="Resources\Images\AboutLogo200.png" />
+    <Resource Include="Resources\Images\aliPayRecQR.png" />
     <Resource Include="Resources\Images\base-digging.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
@@ -115,6 +124,7 @@
     <Resource Include="Resources\Images\shovel.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Resources\Images\wechatPayRecQR.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -127,12 +137,6 @@
 
   <ItemGroup>
     <Reference Include="System.Net.Http" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Config\Settings.cfg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <Target Name="CopyFiles" AfterTargets="CoreBuild">
@@ -163,11 +167,13 @@
     <!--复制webview2 所需要的rumtimes 文件，需要保留原有文件结构-->
     <ItemGroup>
       <RuntimesFiles Include="$(OutputPath)/runtimes/**/*.*" />
+      <ConfigFiles Include="$(OutputPath)/Config/**/*.*" />
     </ItemGroup>
 
     <!--不拷贝到autodesk插件目录下，使用addinmanager加载调试-->
   
       <Copy SourceFiles="@(RuntimesFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)\runtimes\%(RecursiveDir)" />
+       <Copy SourceFiles="@(ConfigFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\$(ProjectName)\Config\%(RecursiveDir)" />
       <Copy SourceFiles="@(AddinFiles)" DestinationFolder="$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)\%(RecursiveDir)" />
   
   </Target>

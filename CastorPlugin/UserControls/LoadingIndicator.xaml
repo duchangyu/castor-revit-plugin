@@ -80,7 +80,7 @@
       HorizontalAlignment="Stretch"
       VerticalAlignment="Center"
       RenderOptions.BitmapScalingMode="HighQuality"
-      Source="pack://application:,,,/CastorPlugin;component/Resources/Images/base-digging.png"
+      Source="{Binding CurrentImage}"
       Stretch="Uniform">
       <Image.Effect>
         <DropShadowEffect

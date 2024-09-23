@@ -11,36 +11,90 @@ using System.Linq;
 using CastorPlugin.Services.DTO;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json.Nodes;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CastorPlugin.Core
 {
     internal class FamilyExtractor
     {
         private readonly RevitFamilyFingerprint _familyFingerprint;
-        private readonly string _apiUrl;
 
-        public FamilyExtractor(Document document, IConfiguration configuration)
+        // Event to notify when a new candidate is posted
+        public event Action? CandidatePosted;
+
+        public FamilyExtractor(Document document)
         {
             _familyFingerprint = new RevitFamilyFingerprint(document);
-            _apiUrl = configuration.GetValue<string>("ApiUrl") ?? @"http://macbook-pro:3000/nft-works-candidates";
         }
 
-        public async Task<int> ExtractFamilies()
+        public async Task<ExtractionResult> ExtractFamilies(CancellationToken cancellationToken)
         {
-            int count = 0;
+            int totalChecked = 0;
+            int posted = 0;
+
             foreach (var nftCandidate in _familyFingerprint.ExtractFamilies())
             {
-                await PostToServerAsCandidate(nftCandidate);
-                count++;
+                totalChecked++;
+
+                bool exists = await FingerprintExists(nftCandidate.FingerPrintHash);
+                if (!exists)
+                {
+                    await PostToServerAsCandidate(nftCandidate);
+                    posted++;
+                    CandidatePosted?.Invoke(); // Trigger the event
+                }
+                else
+                {
+                    Log.Information($"NFT Works Candidate with FingerPrintHash {nftCandidate.FingerPrintHash} already exists on the server.");
+                }
             }
-            return count;
+
+            return new ExtractionResult { TotalChecked = totalChecked, Posted = posted };
+        }
+
+        private async Task<bool> FingerprintExists(string fingerPrintHash)
+        {
+            var payload = new { fingerPrintHash };
+
+            try
+            {
+                string response = await WebServiceBroker.SendPostRequestAsync("/nft-works-candidates/check-fingerprint", payload);
+
+                if (!string.IsNullOrEmpty(response))
+                {
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+                    var checkResponse = JsonSerializer.Deserialize<CheckFingerprintResponse>(response, options);
+
+                    if (checkResponse != null && !string.IsNullOrEmpty(checkResponse.FingerprintId))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (JsonException ex)
+            {
+                Log.Error($"Error deserializing fingerprint check response: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error checking fingerprint existence: {ex.Message}");
+                return false;
+            }
         }
 
         private async Task PostToServerAsCandidate(NftWorksCandidates nftCandidate)
         {
             try
             {
-                string response = await WebServiceBroker.SendPostRequestAsync(_apiUrl, nftCandidate);
+                string response = await WebServiceBroker.SendPostRequestAsync("/nft-works-candidates", nftCandidate);
 
                 if (!string.IsNullOrEmpty(response))
                 {
@@ -73,5 +127,19 @@ namespace CastorPlugin.Core
                 Log.Error($"Error posting NFT Works Candidate to server: {ex.Message}");
             }
         }
+    }
+
+    // DTO for fingerprint check response
+    internal class CheckFingerprintResponse
+    {
+        public string FingerprintId { get; set; }
+        public string Name { get; set; }
+        public int ReferenceCount { get; set; }
+    }
+
+    public class ExtractionResult
+    {
+        public int TotalChecked { get; set; }
+        public int Posted { get; set; }
     }
 }

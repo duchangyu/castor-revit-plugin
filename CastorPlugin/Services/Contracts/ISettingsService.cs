@@ -20,5 +20,7 @@ namespace CastorPlugin.Services.Contracts
 
         int ApplyTransition(bool value);
         void Save();
+
+        string ApiUrl { get; set; }
     }
 }
