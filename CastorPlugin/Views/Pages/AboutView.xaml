@@ -12,20 +12,73 @@
 
   <rl:DynamicScrollViewer>
     <DockPanel Margin="12">
-      <Image
-        Width="200"
-        Margin="0,16,0,0"
-        VerticalAlignment="Top"
-        DockPanel.Dock="Left"
-        Source="../../Resources/Images/AboutLogo200.png"
-        Stretch="Uniform" />
+      <StackPanel Width="200" DockPanel.Dock="Left">
+        <Image
+          Width="200"
+          Margin="0,16,0,0"
+          VerticalAlignment="Top"
+          Source="../../Resources/Images/AboutLogo200.png"
+          Stretch="Uniform" />
+
+        <!--  Donation section  -->
+        <TextBlock
+          Margin="0,16,0,8"
+          HorizontalAlignment="Center"
+          FontWeight="Bold"
+          Text="支持我们" />
+        <TextBlock
+          Margin="0,0,0,8"
+          TextAlignment="Center"
+          TextWrapping="Wrap">
+          如果您觉得Castor-蓖麻链对您有帮助，请考虑给予我们一些支持。您的捐助将帮助我们持续改进和维护这个项目。
+        </TextBlock>
+
+        <!--  QR Codes in one row  -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <!--  WeChat QR Code  -->
+          <StackPanel Grid.Column="0">
+            <TextBlock
+              Margin="0,8,0,4"
+              HorizontalAlignment="Center"
+              FontWeight="SemiBold"
+              Text="微信支付" />
+            <Image
+              Width="90"
+              Height="90"
+              Margin="0,0,0,8"
+              Source="../../Resources/Images/wechatPayRecQR.png"
+              Stretch="Uniform" />
+          </StackPanel>
+
+          <!--  Alipay QR Code  -->
+          <StackPanel Grid.Column="1">
+            <TextBlock
+              Margin="0,8,0,4"
+              HorizontalAlignment="Center"
+              FontWeight="SemiBold"
+              Text="支付宝" />
+            <Image
+              Width="90"
+              Height="90"
+              Margin="0,0,0,8"
+              Source="../../Resources/Images/aliPayRecQR.png"
+              Stretch="Uniform" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+
       <StackPanel Margin="30,0,0,0">
-        <TextBlock FontSize="48" Text="Castor-BIMonChain.com" />
+        <TextBlock FontSize="48" Text="Castor-蓖麻链" />
         <TextBlock
           Margin="0,15,0,0"
           HorizontalAlignment="Left"
           Foreground="{DynamicResource PaletteGreyBrush}"
-          Text="Interactive Revit RFA and RVT project database exploration tool to view and navigate BIM element parameters, properties and relationships."
+          Text="知识创作者的劳动理应得到尊重。"
           TextWrapping="Wrap" />
         <TextBlock
           Margin="0,15,0,0"
