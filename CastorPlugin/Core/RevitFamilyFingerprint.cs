@@ -17,16 +17,46 @@ namespace CastorPlugin.Core
     public class RevitFamilyFingerprint
     {
         // Public properties
+        /// <summary>
+        /// Gets the type of asset, which is always "RevitFamily" for this class.
+        /// </summary>
         public string AssetType { get; } = "RevitFamily";
+
+        /// <summary>
+        /// Gets or sets the name of the asset (family).
+        /// </summary>
         public string AssetName { get; private set; }
+
+        /// <summary>
+        /// Gets a dictionary of parameter characteristics for each family type.
+        /// </summary>
         public Dictionary<string, Dictionary<string, string>> ParameterCharacteristics { get; } = new Dictionary<string, Dictionary<string, string>>();
+
+        /// <summary>
+        /// Gets or sets the thumbnail image of the family as a base64-encoded string.
+        /// </summary>
         public string Thumbnail { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the SHA256 hash of the fingerprint JSON.
+        /// </summary>
         public string FingerPrintHash { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the JSON representation of the fingerprint.
+        /// </summary>
         public string FingerPrintInJson { get; private set; }
+
+        /// <summary>
+        /// Gets a dictionary of geometry characteristics for each family symbol.
+        /// </summary>
         public Dictionary<string, Dictionary<string, object>> GeometryCharacteristics { get; } = new Dictionary<string, Dictionary<string, object>>();
 
 
         // Private fields
+        /// <summary>
+        /// The Revit document containing the families to process.
+        /// </summary>
         private readonly Document _document;
 
         /// <summary>
@@ -480,6 +510,12 @@ namespace CastorPlugin.Core
             }
         }
 
+        /// <summary>
+        /// Extracts geometry data from a GeometryElement and adds it to the geometryData dictionary.
+        /// </summary>
+        /// <param name="symbolName">The name of the symbol being processed.</param>
+        /// <param name="geomElem">The GeometryElement to extract data from.</param>
+        /// <param name="geometryData">The dictionary to store the extracted geometry data.</param>
         private void ExtractGeometryData(string symbolName, GeometryElement geomElem, Dictionary<string, object> geometryData)
         {
             try
@@ -528,6 +564,11 @@ namespace CastorPlugin.Core
             }
         }
 
+        /// <summary>
+        /// Extracts bounding box data from a BoundingBoxXYZ object.
+        /// </summary>
+        /// <param name="boundingBox">The BoundingBoxXYZ to extract data from.</param>
+        /// <returns>A dictionary containing the width, depth, and height of the bounding box.</returns>
         private Dictionary<string, double> ExtractBoundingBoxData(BoundingBoxXYZ boundingBox)
         {
             return new Dictionary<string, double>
@@ -538,6 +579,11 @@ namespace CastorPlugin.Core
             };
         }
 
+        /// <summary>
+        /// Calculates the total surface area of all solids in a GeometryElement.
+        /// </summary>
+        /// <param name="geomElem">The GeometryElement to calculate surface area for.</param>
+        /// <returns>The total surface area of all solids in the GeometryElement.</returns>
         private double CalculateSurfaceArea(GeometryElement geomElem)
         {
             double surfaceArea = 0;
@@ -554,6 +600,11 @@ namespace CastorPlugin.Core
             return surfaceArea;
         }
 
+        /// <summary>
+        /// Calculates the total volume of all solids in a GeometryElement.
+        /// </summary>
+        /// <param name="geomElem">The GeometryElement to calculate volume for.</param>
+        /// <returns>The total volume of all solids in the GeometryElement.</returns>
         private double CalculateVolume(GeometryElement geomElem)
         {
             double volume = 0;
@@ -567,6 +618,11 @@ namespace CastorPlugin.Core
             return volume;
         }
 
+        /// <summary>
+        /// Counts the total number of faces in all solids in a GeometryElement.
+        /// </summary>
+        /// <param name="geomElem">The GeometryElement to count faces for.</param>
+        /// <returns>The total number of faces in all solids in the GeometryElement.</returns>
         private int CountFaces(GeometryElement geomElem)
         {
             int faceCount = 0;
@@ -580,6 +636,11 @@ namespace CastorPlugin.Core
             return faceCount;
         }
 
+        /// <summary>
+        /// Counts the total number of unique vertices in all solids in a GeometryElement.
+        /// </summary>
+        /// <param name="geomElem">The GeometryElement to count vertices for.</param>
+        /// <returns>The total number of unique vertices in all solids in the GeometryElement.</returns>
         private int CountVertices(GeometryElement geomElem)
         {
             HashSet<XYZ> uniqueVertices = new HashSet<XYZ>();

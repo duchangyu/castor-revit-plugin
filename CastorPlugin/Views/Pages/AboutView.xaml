@@ -30,7 +30,7 @@
           Margin="0,0,0,8"
           TextAlignment="Center"
           TextWrapping="Wrap">
-          如果您觉得Castor-蓖麻链对您有帮助，请考虑给予我们一些支持。您的捐助将帮助我们持续改进和维护这个项目。
+          如果您觉得Castor-蓖麻链做的工作有意义，请考虑给予我们一些支持。您的捐助将帮助我们持续改进和维护这个项目。
         </TextBlock>
 
         <!--  QR Codes in one row  -->

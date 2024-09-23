@@ -17,43 +17,67 @@ using System.Threading.Tasks;
 
 namespace CastorPlugin.Core
 {
+    /// <summary>
+    /// Handles the extraction and processing of Revit families as NFT candidates.
+    /// </summary>
     internal class FamilyExtractor
     {
         private readonly RevitFamilyFingerprint _familyFingerprint;
 
-        // Event to notify when a new candidate is posted
+        /// <summary>
+        /// Event triggered when a new candidate is posted to the server.
+        /// </summary>
         public event Action? CandidatePosted;
 
+        /// <summary>
+        /// Initializes a new instance of the FamilyExtractor class.
+        /// </summary>
+        /// <param name="document">The Revit document to extract families from.</param>
         public FamilyExtractor(Document document)
         {
             _familyFingerprint = new RevitFamilyFingerprint(document);
         }
 
+        /// <summary>
+        /// Extracts families from the Revit document and processes them as NFT candidates.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token for async operations.</param>
+        /// <returns>An ExtractionResult containing the total number of families checked and posted.</returns>
         public async Task<ExtractionResult> ExtractFamilies(CancellationToken cancellationToken)
         {
             int totalChecked = 0;
             int posted = 0;
 
+            // Iterate through each NFT candidate extracted from the Revit families
             foreach (var nftCandidate in _familyFingerprint.ExtractFamilies())
             {
                 totalChecked++;
 
+                // Check if the fingerprint already exists on the server
                 bool exists = await FingerprintExists(nftCandidate.FingerPrintHash);
                 if (!exists)
                 {
+                    // If the fingerprint doesn't exist, post it to the server as a new candidate
                     await PostToServerAsCandidate(nftCandidate);
                     posted++;
-                    CandidatePosted?.Invoke(); // Trigger the event
+                    CandidatePosted?.Invoke(); // Notify subscribers that a new candidate has been posted
                 }
                 else
                 {
+                    // Log if the candidate already exists on the server
                     Log.Information($"NFT Works Candidate with FingerPrintHash {nftCandidate.FingerPrintHash} already exists on the server.");
                 }
             }
 
+            // Return the results of the extraction process
             return new ExtractionResult { TotalChecked = totalChecked, Posted = posted };
         }
 
+        /// <summary>
+        /// Checks if a fingerprint already exists on the server.
+        /// </summary>
+        /// <param name="fingerPrintHash">The hash of the fingerprint to check.</param>
+        /// <returns>True if the fingerprint exists, false otherwise.</returns>
         private async Task<bool> FingerprintExists(string fingerPrintHash)
         {
             var payload = new { fingerPrintHash };
@@ -90,6 +114,10 @@ namespace CastorPlugin.Core
             }
         }
 
+        /// <summary>
+        /// Posts an NFT candidate to the server.
+        /// </summary>
+        /// <param name="nftCandidate">The NFT candidate to post.</param>
         private async Task PostToServerAsCandidate(NftWorksCandidates nftCandidate)
         {
             try
@@ -129,7 +157,9 @@ namespace CastorPlugin.Core
         }
     }
 
-    // DTO for fingerprint check response
+    /// <summary>
+    /// Data Transfer Object for fingerprint check response.
+    /// </summary>
     internal class CheckFingerprintResponse
     {
         public string FingerprintId { get; set; }
@@ -137,9 +167,19 @@ namespace CastorPlugin.Core
         public int ReferenceCount { get; set; }
     }
 
+    /// <summary>
+    /// Represents the result of the family extraction process.
+    /// </summary>
     public class ExtractionResult
     {
+        /// <summary>
+        /// The total number of families checked during extraction.
+        /// </summary>
         public int TotalChecked { get; set; }
+
+        /// <summary>
+        /// The number of families successfully posted as new candidates.
+        /// </summary>
         public int Posted { get; set; }
     }
 }

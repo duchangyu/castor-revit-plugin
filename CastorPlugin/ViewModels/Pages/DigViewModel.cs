@@ -77,7 +77,7 @@ namespace CastorPlugin.ViewModels.Pages
                 await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
                 
                 // Update WebView2 URL after successful dig
-                WebViewUrl = "http:///macbook-pro:9527/#/candidates";
+                WebViewUrl = "http://macbook-pro:9527/#/candidates"; // Corrected URL
 
                 _snackbarService.Show(
                     "Dig operation",
