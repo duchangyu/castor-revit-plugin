@@ -14,43 +14,45 @@ namespace CastorPlugin.Core
     /// <summary>
     /// Represents a fingerprint of a Revit family, containing its properties and methods for extraction and processing.
     /// </summary>
-    public class RevitFamilyFingerprint
+    public class RevitFamilyExtractor
     {
-        // Public properties
+
+        #region private members
         /// <summary>
         /// Gets the type of asset, which is always "RevitFamily" for this class.
         /// </summary>
-        public string AssetType { get; } = "RevitFamily";
+        private string _assetType { get; } = "RevitFamily";
 
         /// <summary>
         /// Gets or sets the name of the asset (family).
         /// </summary>
-        public string AssetName { get; private set; }
+        private string _assetName { get;  set; }
 
-        /// <summary>
-        /// Gets a dictionary of parameter characteristics for each family type.
-        /// </summary>
-        public Dictionary<string, Dictionary<string, string>> ParameterCharacteristics { get; } = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
         /// Gets or sets the thumbnail image of the family as a base64-encoded string.
         /// </summary>
-        public string Thumbnail { get; private set; }
+        private string _thumbnail { get;  set; }
 
         /// <summary>
         /// Gets or sets the SHA256 hash of the fingerprint JSON.
         /// </summary>
-        public string FingerPrintHash { get; private set; }
+        private string _fingerPrintHash { get;  set; }
 
         /// <summary>
         /// Gets or sets the JSON representation of the fingerprint.
         /// </summary>
-        public string FingerPrintInJson { get; private set; }
+        private string _fingerPrintInJson { get;  set; }
+
+        /// <summary>
+        /// Gets a dictionary of parameter characteristics for each family type.
+        /// </summary>
+        private Dictionary<string, Dictionary<string, string>> _parameterCharacteristics { get; } = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
         /// Gets a dictionary of geometry characteristics for each family symbol.
         /// </summary>
-        public Dictionary<string, Dictionary<string, object>> GeometryCharacteristics { get; } = new Dictionary<string, Dictionary<string, object>>();
+        private Dictionary<string, Dictionary<string, object>> _geometryCharacteristics { get; } = new Dictionary<string, Dictionary<string, object>>();
 
 
         // Private fields
@@ -59,11 +61,13 @@ namespace CastorPlugin.Core
         /// </summary>
         private readonly Document _document;
 
+        #endregion
+
         /// <summary>
         /// Initializes a new instance of the RevitFamilyFingerprint class.
         /// </summary>
         /// <param name="document">The Revit document containing the families to process.</param>
-        public RevitFamilyFingerprint(Document document)
+        public RevitFamilyExtractor(Document document)
         {
             _document = document;
         }
@@ -86,13 +90,15 @@ namespace CastorPlugin.Core
             }
         }
 
+        #region private fucntions 
+
         /// <summary>
         /// Extracts all relevant data from a given family, including geometry characteristics.
         /// </summary>
         /// <param name="family">The family to process.</param>
         private void ExtractFamilyData(Family family)
         {
-            AssetName = family.Name;
+            _assetName = family.Name;
             ExtractFamilyParameters(family);
             ExtractThumbnail(family);
             ExtractGeometryCharacteristics(family);
@@ -135,7 +141,7 @@ namespace CastorPlugin.Core
                     string thumbnail = ExtractFamilySymbolPreviewThumbnail(symbol);
                     if (!string.IsNullOrEmpty(thumbnail))
                     {
-                        Thumbnail = thumbnail;
+                        _thumbnail = thumbnail;
                         return;
                     }
                 }
@@ -150,11 +156,11 @@ namespace CastorPlugin.Core
         {
             return new NftWorksCandidates
             {
-                Name = AssetName,
+                Name = _assetName,
                 Type = 1, // REVIT Family
-                FingerPrintHash = FingerPrintHash,
-                FingerPrintInJson = FingerPrintInJson,
-                Thumbnail = Thumbnail
+                FingerPrintHash = _fingerPrintHash,
+                FingerPrintInJson = _fingerPrintInJson,
+                Thumbnail = _thumbnail
             };
         }
 
@@ -163,7 +169,7 @@ namespace CastorPlugin.Core
         /// </summary>
         private void GenerateFingerPrintJson()
         {
-            FingerPrintInJson = ToJson();
+            _fingerPrintInJson = ToJson();
         }
 
         /// <summary>
@@ -171,7 +177,7 @@ namespace CastorPlugin.Core
         /// </summary>
         private void GenerateFingerPrintHash()
         {
-            FingerPrintHash = ConvertToSha256(FingerPrintInJson);
+            _fingerPrintHash = ConvertToSha256(_fingerPrintInJson);
         }
 
         /// <summary>
@@ -334,29 +340,29 @@ namespace CastorPlugin.Core
         /// <param name="typeName">The name of the family type.</param>
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="value">The value of the parameter.</param>
-        public void AddTypeParameter(string typeName, string parameterName, string value)
+        private void AddTypeParameter(string typeName, string parameterName, string value)
         {
-            if (!ParameterCharacteristics.ContainsKey(typeName))
+            if (!_parameterCharacteristics.ContainsKey(typeName))
             {
-                ParameterCharacteristics[typeName] = new Dictionary<string, string>();
+                _parameterCharacteristics[typeName] = new Dictionary<string, string>();
             }
-            ParameterCharacteristics[typeName][parameterName] = value;
+            _parameterCharacteristics[typeName][parameterName] = value;
         }
 
         /// <summary>
         /// Converts the fingerprint to a JSON string.
         /// </summary>
         /// <returns>The JSON representation of the fingerprint.</returns>
-        public string ToJson()
+        private string ToJson()
         {
             var fingerPrintDict = new Dictionary<string, object>
             {
                 ["Asset"] = new Dictionary<string, object>
                 {
-                    ["AssetType"] = AssetType,
-                    ["AssetName"] = AssetName,
-                    ["ParameterCharacteristics"] = ParameterCharacteristics,
-                    ["GeometryCharacteristics"] = GeometryCharacteristics
+                    ["AssetType"] = _assetType,
+                    ["AssetName"] = _assetName,
+                    ["ParameterCharacteristics"] = _parameterCharacteristics,
+                    ["GeometryCharacteristics"] = _geometryCharacteristics
                 }
             };
 
@@ -494,7 +500,7 @@ namespace CastorPlugin.Core
                             // Only add to GeometryCharacteristics if we extracted some data
                             if (geometryData.Count > 0)
                             {
-                                GeometryCharacteristics[symbol.Name] = geometryData;
+                                _geometryCharacteristics[symbol.Name] = geometryData;
                             }
                         }
                         else
@@ -657,6 +663,7 @@ namespace CastorPlugin.Core
             }
             return uniqueVertices.Count;
         }
+        #endregion
 
     }
 }

@@ -1,13 +1,8 @@
-﻿using Autodesk.Revit.UI;
-using CastorPlugin.Core;
+﻿using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
-using Microsoft.Extensions.Configuration;
-using Revit.Async;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text.Json;
 
 namespace CastorPlugin.Services
 {
@@ -45,12 +40,12 @@ namespace CastorPlugin.Services
 
                 bool ro = document.IsReadOnly;
 
-                FamilyExtractor familyExtractor = new FamilyExtractor(document);
+                ApiService familyExtractorApiService = new ApiService(document);
                 
-                familyExtractor.CandidatePosted += () => CandidatePosted?.Invoke();
+                familyExtractorApiService.CandidatePosted += () => CandidatePosted?.Invoke();
 
                 // Perform the extraction
-                var result = await familyExtractor.ExtractFamilies(cancellationToken);
+                var result = await familyExtractorApiService.ExtractFamilies(cancellationToken);
 
                 Log.Information($"Total Checked: {result.TotalChecked}, Posted: {result.Posted}");
 
@@ -104,6 +99,34 @@ namespace CastorPlugin.Services
                 // If the document has never been saved, use the current time
                 return DateTime.Now;
             }
+        }
+
+        public async Task<int> FetchCandidateCountAsync()
+        {
+            try
+            {
+                var response = await WebServiceBroker.SendGetRequestAsync("/nft-works-candidates/counts");
+                if (!string.IsNullOrEmpty(response))
+                {
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    };
+                    var counts = JsonSerializer.Deserialize<CandidateCounts>(response, options);
+                    return counts.TotalCount;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to fetch candidate count: {ex.Message}");
+            }
+            return 0; // Return 0 or some default value in case of failure
+        }
+
+        private class CandidateCounts
+        {
+            public int TotalCount { get; set; }
+            public int AcquiredCount { get; set; }
         }
     }
 }

@@ -20,9 +20,10 @@ namespace CastorPlugin.Core
     /// <summary>
     /// Handles the extraction and processing of Revit families as NFT candidates.
     /// </summary>
-    internal class FamilyExtractor
+    internal class ApiService
     {
-        private readonly RevitFamilyFingerprint _familyFingerprint;
+        private readonly RevitFamilyExtractor _familyFingerprintExtractor;
+        private readonly string _sourceDocumentId;
 
         /// <summary>
         /// Event triggered when a new candidate is posted to the server.
@@ -33,9 +34,10 @@ namespace CastorPlugin.Core
         /// Initializes a new instance of the FamilyExtractor class.
         /// </summary>
         /// <param name="document">The Revit document to extract families from.</param>
-        public FamilyExtractor(Document document)
+        public ApiService(Document document)
         {
-            _familyFingerprint = new RevitFamilyFingerprint(document);
+            _familyFingerprintExtractor = new RevitFamilyExtractor(document);
+            _sourceDocumentId = document.ProjectInformation.UniqueId; // Assuming UniqueId is the document ID
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace CastorPlugin.Core
             int posted = 0;
 
             // Iterate through each NFT candidate extracted from the Revit families
-            foreach (var nftCandidate in _familyFingerprint.ExtractFamilies())
+            foreach (var nftCandidate in _familyFingerprintExtractor.ExtractFamilies())
             {
                 totalChecked++;
 
@@ -120,9 +122,15 @@ namespace CastorPlugin.Core
         /// <param name="nftCandidate">The NFT candidate to post.</param>
         private async Task PostToServerAsCandidate(NftWorksCandidates nftCandidate)
         {
+            var payload = new
+            {
+                nftCandidate
+            };
+
             try
             {
-                string response = await WebServiceBroker.SendPostRequestAsync("/nft-works-candidates", nftCandidate);
+                string url = $"/nft-works-candidates?sourceDocumentId={_sourceDocumentId}";
+                string response = await WebServiceBroker.SendPostRequestAsync(url, payload);
 
                 if (!string.IsNullOrEmpty(response))
                 {

@@ -29,7 +29,7 @@ namespace CastorPlugin.Views.Pages
         private async void DigView_Loaded(object sender, RoutedEventArgs e)
         {
             await InitializeWebView2();
-            await ViewModel.FetchCandidateCountAsync();
+            await ViewModel.UpdateDigCounts();
         }
 
         private async Task InitializeWebView2()

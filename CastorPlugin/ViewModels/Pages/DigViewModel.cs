@@ -80,6 +80,9 @@ namespace CastorPlugin.ViewModels.Pages
                 // Update WebView2 URL after successful dig
                 WebViewUrl = "http://macbook-pro:9527/#/candidates"; // Corrected URL
 
+                //update total candidates
+                await RevitTask.RunAsync(() => _digService.FetchCandidateCountAsync());
+
                 _snackbarService.Show(
                     "Dig operation",
                     "Dig operation completed successfully",
@@ -133,20 +136,11 @@ namespace CastorPlugin.ViewModels.Pages
             });
         }
 
-        public async Task FetchCandidateCountAsync()
+        public async Task UpdateDigCounts()
         {
             try
             {
-                var response = await WebServiceBroker.SendGetRequestAsync("/nft-works-candidates/counts");
-                if (!string.IsNullOrEmpty(response))
-                {
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                    };
-                    var counts = JsonSerializer.Deserialize<CandidateCounts>(response, options);
-                    TotalCandidates = counts.TotalCount;
-                }
+                TotalCandidates = await _digService.FetchCandidateCountAsync();
             }
             catch (Exception ex)
             {
@@ -159,10 +153,6 @@ namespace CastorPlugin.ViewModels.Pages
             }
         }
 
-        private class CandidateCounts
-        {
-            public int TotalCount { get; set; }
-            public int AcquiredCount { get; set; }
-        }
+
     }
 }
