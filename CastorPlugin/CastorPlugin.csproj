@@ -67,6 +67,7 @@
     <None Remove="Resources\Images\dig-sucess.png" />
     <None Remove="Resources\Images\loading-animation.png" />
     <None Remove="Resources\Images\RibbonIcon16-bak.png" />
+    <None Remove="Resources\Images\RibbonIcon16-bima.png" />
     <None Remove="Resources\Images\RibbonIcon16.png" />
     <None Remove="Resources\Images\RibbonIcon32-bak.png" />
     <None Remove="Resources\Images\RibbonIcon32.png" />
@@ -77,7 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\Settings.cfg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -123,6 +124,7 @@
       <CopyToOutputDirectory></CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\Images\RibbonIcon16-bak.png" />
+    <Resource Include="Resources\Images\RibbonIcon16-bima.png" />
     <Resource Include="Resources\Images\RibbonIcon16.png" />
     <Resource Include="Resources\Images\RibbonIcon32-bak.png" />
     <Resource Include="Resources\Images\RibbonIcon32.png" />

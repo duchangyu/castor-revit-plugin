@@ -169,5 +169,10 @@ namespace CastorPlugin.Services
 
         }
 
+        public string GetLandingPageUrl()
+        {
+            return _configuration["LandingPageUrl"];
+        }
+
     }
 }

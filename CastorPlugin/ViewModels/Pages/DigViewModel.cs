@@ -32,7 +32,7 @@ namespace CastorPlugin.ViewModels.Pages
         private int _completedCandidates;
 
         [ObservableProperty]
-        private string _webViewUrl = "https://www.baidu.com"; // Initial URL
+        private string _webViewUrl;
 
         public LoadingIndicator LoadingIndicator { get; set; }
 
@@ -52,6 +52,7 @@ namespace CastorPlugin.ViewModels.Pages
             _digService = digService;
             _castorService = castorService;
             LoadingIndicator = new LoadingIndicator();
+            WebViewUrl = _settingsService.GetLandingPageUrl(); // Set initial URL from settings
         }
 
         public void OnNavigatedTo()

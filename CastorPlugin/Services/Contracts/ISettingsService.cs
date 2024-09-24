@@ -22,5 +22,7 @@ namespace CastorPlugin.Services.Contracts
         void Save();
 
         string ApiUrl { get; set; }
+
+        string GetLandingPageUrl();
     }
 }
