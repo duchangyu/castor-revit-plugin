@@ -26,9 +26,6 @@ namespace CastorPlugin.ViewModels.Pages
         private bool _isLoading;
 
         [ObservableProperty]
-        private bool _isDigging;
-
-        [ObservableProperty]
         private int _completedCandidates;
 
         [ObservableProperty]
@@ -68,8 +65,8 @@ namespace CastorPlugin.ViewModels.Pages
         [RelayCommand]
         private async Task DigAsync()
         {
+
             IsLoading = true;
-            IsDigging = true;
             _cancellationTokenSource = new CancellationTokenSource();
 
             try
