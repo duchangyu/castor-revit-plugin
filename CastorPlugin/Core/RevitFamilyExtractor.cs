@@ -8,6 +8,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using CastorPlugin.Services.DTO; 
+using CastorPlugin.Utils;
 
 namespace CastorPlugin.Core
 {
@@ -177,7 +178,7 @@ namespace CastorPlugin.Core
         /// </summary>
         private void GenerateFingerPrintHash()
         {
-            _fingerPrintHash = ConvertToSha256(_fingerPrintInJson);
+            _fingerPrintHash = Util.ConvertToSha256(_fingerPrintInJson);
         }
 
         /// <summary>
@@ -215,26 +216,7 @@ namespace CastorPlugin.Core
             }
         }
 
-        /// <summary>
-        /// Converts a string to its SHA256 hash representation.
-        /// </summary>
-        /// <param name="input">The string to hash.</param>
-        /// <returns>The SHA256 hash of the input string.</returns>
-        private string ConvertToSha256(string input)
-        {
-            using (SHA256 sha256 = SHA256.Create())
-            {
-                byte[] inputBytes = Encoding.UTF8.GetBytes(input);
-                byte[] hashBytes = sha256.ComputeHash(inputBytes);
 
-                StringBuilder builder = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    builder.Append(hashBytes[i].ToString("x2"));
-                }
-                return builder.ToString();
-            }
-        }
 
         /// <summary>
         /// Retrieves a dictionary of family parameters from a FamilyManager.

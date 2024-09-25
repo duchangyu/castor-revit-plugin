@@ -71,7 +71,7 @@
               x:Name="cancelBtn"
               Command="{Binding CancelDigCommand}"
               Content="取消"
-              IsEnabled="{Binding IsDigging}" />
+              IsEnabled="{Binding IsLoading}" />
           </StackPanel>
         </Grid>
       </StackPanel>

@@ -21,13 +21,15 @@ namespace CastorPlugin.Services
             
         }
 
-        public async Task Dig(CancellationToken cancellationToken)
+        public async Task<string> Dig(CancellationToken cancellationToken)
         {
             try
             {
                 var document = RevitApi.Document;
-                var documentId = document.ProjectInformation.UniqueId;
+                var documentId = GetUniqueDocumentId(document);
                 
+                Log.Information($"Processing document: {documentId}");
+
                 // Get the document's last modified time
                 DateTime lastModified = GetDocumentLastModifiedTime(document);
 
@@ -35,12 +37,10 @@ namespace CastorPlugin.Services
                 if (!ShouldExtractDocument(documentId, lastModified))
                 {
                     Log.Information("Document has not changed since last extraction. Skipping.");
-                    return;
+                    return documentId;
                 }
 
-                bool ro = document.IsReadOnly;
-
-                ApiService familyExtractorApiService = new ApiService(document);
+                ApiService familyExtractorApiService = new ApiService(document, documentId);
                 
                 familyExtractorApiService.CandidatePosted += () => CandidatePosted?.Invoke();
 
@@ -51,6 +51,8 @@ namespace CastorPlugin.Services
 
                 // Update the extracted documents dictionary with the latest extraction time
                 _extractedDocuments[documentId] = lastModified;
+
+                return documentId;
             }
             catch (OperationCanceledException)
             {
@@ -62,6 +64,29 @@ namespace CastorPlugin.Services
                 Log.Error($"Error in Dig: {ex.Message}");
                 throw;
             }
+        }
+
+        private string GetUniqueDocumentId(Autodesk.Revit.DB.Document document)
+        {
+            string title = document.Title;
+            string pathName = document.PathName;
+            string documentId = String.Empty;
+
+            // For unsaved documents, PathName will be empty
+            if (string.IsNullOrEmpty(pathName))
+            {
+                documentId =  $"Unsaved_{title}";
+            }
+
+            // For saved documents, combine title and full path
+            documentId =  $"{title}_{pathName}";
+
+            //convert to sha256
+            documentId = Utils.Util.ConvertToSha256(documentId);
+
+
+            return documentId;
+
         }
 
         /// <summary>
@@ -97,6 +122,7 @@ namespace CastorPlugin.Services
             else
             {
                 // If the document has never been saved, use the current time
+                // You might want to store this time for unsaved documents
                 return DateTime.Now;
             }
         }

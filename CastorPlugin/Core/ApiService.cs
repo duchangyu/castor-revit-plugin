@@ -34,10 +34,11 @@ namespace CastorPlugin.Core
         /// Initializes a new instance of the FamilyExtractor class.
         /// </summary>
         /// <param name="document">The Revit document to extract families from.</param>
-        public ApiService(Document document)
+        /// <param name="documentId">The ID of the source document.</param>
+        public ApiService(Document document, string documentId)
         {
             _familyFingerprintExtractor = new RevitFamilyExtractor(document);
-            _sourceDocumentId = document.ProjectInformation.UniqueId; // Assuming UniqueId is the document ID
+            _sourceDocumentId = documentId;
         }
 
         /// <summary>
@@ -122,15 +123,10 @@ namespace CastorPlugin.Core
         /// <param name="nftCandidate">The NFT candidate to post.</param>
         private async Task PostToServerAsCandidate(NftWorksCandidates nftCandidate)
         {
-            var payload = new
-            {
-                nftCandidate
-            };
-
             try
             {
                 string url = $"/nft-works-candidates?sourceDocumentId={_sourceDocumentId}";
-                string response = await WebServiceBroker.SendPostRequestAsync(url, payload);
+                string response = await WebServiceBroker.SendPostRequestAsync(url, nftCandidate);
 
                 if (!string.IsNullOrEmpty(response))
                 {

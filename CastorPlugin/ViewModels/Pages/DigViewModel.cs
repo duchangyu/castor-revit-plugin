@@ -12,6 +12,8 @@ using Wpf.Ui.Controls;
 using CastorPlugin.UserControls;
 using System.Text.Json;
 using CastorPlugin.Utils;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace CastorPlugin.ViewModels.Pages
 {
@@ -72,10 +74,10 @@ namespace CastorPlugin.ViewModels.Pages
             try
             {
                 _digService.CandidatePosted += OnCandidatePosted;
-                await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
+                var documentId = await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
                 
                 // Update WebView2 URL after successful dig
-                WebViewUrl = "http://macbook-pro:9527/#/candidates"; // Corrected URL
+                WebViewUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
 
                 //update total candidates
                 await RevitTask.RunAsync(() => _digService.FetchCandidateCountAsync());
@@ -109,7 +111,6 @@ namespace CastorPlugin.ViewModels.Pages
             {
                 _digService.CandidatePosted -= OnCandidatePosted;
                 IsLoading = false;
-                IsDigging = false;
                 _cancellationTokenSource = null;
             }
         }
