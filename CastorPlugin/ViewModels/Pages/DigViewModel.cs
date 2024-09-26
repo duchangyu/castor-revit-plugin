@@ -1,19 +1,11 @@
-﻿using CastorPlugin.Core;
-using CastorPlugin.Services.Contracts;
+﻿using CastorPlugin.Services.Contracts;
+using CastorPlugin.UserControls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Nice3point.Revit.Toolkit.External.Handlers;
 using Revit.Async;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
-using CastorPlugin.UserControls;
-using System.Text.Json;
-using CastorPlugin.Utils;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace CastorPlugin.ViewModels.Pages
 {
@@ -31,9 +23,10 @@ namespace CastorPlugin.ViewModels.Pages
         private int _completedCandidates;
 
         [ObservableProperty]
-        private string _webViewUrl;
+        private string _webViewUrl; // 设置一个默认URL
 
         public LoadingIndicator LoadingIndicator { get; set; }
+        public string LastReceivedMessage { get; private set; }
 
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -51,17 +44,17 @@ namespace CastorPlugin.ViewModels.Pages
             _digService = digService;
             _castorService = castorService;
             LoadingIndicator = new LoadingIndicator();
-            WebViewUrl = _settingsService.GetLandingPageUrl(); // Set initial URL from settings
+            _webViewUrl = _settingsService.GetLandingPageUrl(); // Set initial URL from settings
         }
 
         public void OnNavigatedTo()
         {
-            System.Diagnostics.Debug.WriteLine($"Navigated to {GetType().FullName}");
+           Log.Information($"Navigated to {GetType().FullName}");
         }
 
         public void OnNavigatedFrom()
         {
-            System.Diagnostics.Debug.WriteLine($"Navigated from {GetType().FullName}");
+            Log.Information($"Navigated from {GetType().FullName}");
         }
 
         [RelayCommand]
@@ -75,9 +68,10 @@ namespace CastorPlugin.ViewModels.Pages
             {
                 _digService.CandidatePosted += OnCandidatePosted;
                 var documentId = await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
-                
+
+               
                 // Update WebView2 URL after successful dig
-                WebViewUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
+                UpdateCandidateListUrl(documentId);
 
                 //update total candidates
                 await RevitTask.RunAsync(() => _digService.FetchCandidateCountAsync());
@@ -151,6 +145,45 @@ namespace CastorPlugin.ViewModels.Pages
             }
         }
 
+        public void HandleWebViewMessage(string message, string source)
+        {
+            if (IsAllowedOrigin(source))
+            {
+                try
+                {
+                    var jsonMessage = JsonSerializer.Deserialize<JsonElement>(message);
+                    if (jsonMessage.TryGetProperty("type", out var typeElement) && 
+                        jsonMessage.TryGetProperty("content", out var contentElement))
+                    {
+                        LastReceivedMessage = $"收到消息: {typeElement.GetString()} - {contentElement.GetString()}";
+                    }
+                    else
+                    {
+                        LastReceivedMessage = $"收到消息: {message}";
+                    }
+                }
+                catch (JsonException)
+                {
+                    LastReceivedMessage = $"收到消息: {message}";
+                }
+            }
+            else
+            {
+                // 记录或处理未经授权的消息尝试
+                LastReceivedMessage = "收到来自未授权源的消息";
+            }
+        }
 
+        private bool IsAllowedOrigin(string uri)
+        {
+            string[] allowedOrigins = { "https://trusted-domain.com" };
+            return Array.Exists(allowedOrigins, origin => uri.StartsWith(origin, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public void UpdateCandidateListUrl(string documentId)
+        {
+            WebViewUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
+            
+        }
     }
 }

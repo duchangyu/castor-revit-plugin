@@ -5,6 +5,8 @@ using System.IO;
 using System.Windows;
 using Wpf.Ui.Controls;
 using System.Windows.Controls;
+using CastorPlugin.UserControls;
+using System;
 
 namespace CastorPlugin.Views.Pages
 {
@@ -28,51 +30,16 @@ namespace CastorPlugin.Views.Pages
 
         private async void DigView_Loaded(object sender, RoutedEventArgs e)
         {
-            await InitializeWebView2();
+            //await InitializeWebView2();
             await ViewModel.UpdateDigCounts();
         }
 
-        private async Task InitializeWebView2()
+
+        private void WebView_WebMessageReceived(object sender, WebMessageReceivedEventArgs e)
         {
-            if (webView != null && webView.CoreWebView2 == null)
-            {
-                string tempPath = Path.GetTempPath();
-                var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
-                await webView.EnsureCoreWebView2Async(env);
-
-                webView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
-            }
-        }
-
-        private void CoreWebView2_NewWindowRequested(object sender, CoreWebView2NewWindowRequestedEventArgs e)
-        {
-            // not to open link in new window
-            e.NewWindow = (CoreWebView2)sender;
-        }
-
-        private  void Button_Click(object sender, RoutedEventArgs e)
-        {
-            //if (webView != null)
-            //{
-
-            //    if (webView.CoreWebView2 != null)
-            //    {
-
-            //        webView.CoreWebView2.Navigate(addressBar.Text);
-            //    }
-            //    else
-            //    {
-            //        webView.Source = new Uri(addressBar.Text);
-            //        //MessageBox.Show("not ready yet");
-            //    }
-            //}
-
-        }
-
-        private void btnDigTest_Click(object sender, RoutedEventArgs e)
-        {
-            //RevitApi.ScanFamilies();
-          
+            // 处理接收到的消息
+            // 例如：
+            // MessageBox.Show($"收到消息：{e.Message}，来源：{e.Source}");
         }
     }
 }

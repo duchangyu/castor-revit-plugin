@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:CastorPlugin.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:uc="clr-namespace:CastorPlugin.UserControls"
   xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
   Title="DashboardView"
   d:DesignHeight="450"
@@ -15,11 +16,12 @@
     <TextBlock Text="市面上的BIM构件去除重复因素，约10万个，尽快登记抢占，手快有，手慢无..." />
     <Button Content="test" />
 
-    <wv2:WebView2
-      Name="webView"
+    <uc:WebView2Control
+      x:Name="webView"
       Height="300"
       VerticalAlignment="Top"
-      Source="https://www.microsoft.com" />
+      Source="https://www.microsoft.com"
+      WebMessageReceived="WebView_WebMessageReceived" />
   </StackPanel>
 
 

@@ -77,19 +77,19 @@
       </StackPanel>
 
       <Grid>
-        <Wpf:WebView2
-          Name="webView"
-          Margin="0"
+        <uc:WebView2Control
+          x:Name="webView"
           HorizontalAlignment="Stretch"
           VerticalAlignment="Stretch"
           Source="{Binding WebViewUrl, Mode=TwoWay}"
-          Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}" />
+          Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+          WebMessageReceived="WebView_WebMessageReceived" />
 
         <!--  LoadingIndicator overlay  -->
         <Grid Background="#80000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolVisibilityConverter}}">
           <ContentControl
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
             Content="{Binding LoadingIndicator}" />
         </Grid>
       </Grid>
