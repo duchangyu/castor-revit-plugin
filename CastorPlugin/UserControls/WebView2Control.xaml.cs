@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using CastorPlugin.Core;
 using CastorPlugin.Core.Exceptions;
+using System.Windows.Media.Animation;
 
 namespace CastorPlugin.UserControls
 {
@@ -34,6 +35,13 @@ namespace CastorPlugin.UserControls
                 new PropertyMetadata(null));
 
         /// <summary>
+        /// IsLoading 依赖属性，表示WebView是否正在加载内容
+        /// </summary>
+        public static readonly DependencyProperty IsLoadingProperty =
+            DependencyProperty.Register("IsLoading", typeof(bool), typeof(WebView2Control), 
+                new PropertyMetadata(false, OnIsLoadingChanged));
+
+        /// <summary>
         /// 获取或设置 WebView2 的 URL
         /// </summary>
         public string Source
@@ -52,6 +60,15 @@ namespace CastorPlugin.UserControls
         }
 
         /// <summary>
+        /// 获取或设置WebView是否正在加载内容
+        /// </summary>
+        public bool IsLoading
+        {
+            get { return (bool)GetValue(IsLoadingProperty); }
+            private set { SetValue(IsLoadingProperty, value); }
+        }
+
+        /// <summary>
         /// 当从 Web 页面接收到消息时触发的事件
         /// </summary>
         public event EventHandler<WebMessageReceivedEventArgs> WebMessageReceived;
@@ -59,6 +76,10 @@ namespace CastorPlugin.UserControls
         private bool _isInitialized;
         private bool _isDisposed;
         private readonly SemaphoreSlim _initializationLock = new SemaphoreSlim(1, 1);
+
+        // 定义页面加载完成后的渲染延迟时间（毫秒）
+        private const int RenderDelayMs = 500;
+        private CancellationTokenSource _fadeTokenSource;
 
         public WebView2Control()
         {
@@ -74,6 +95,7 @@ namespace CastorPlugin.UserControls
         {
             if (!_isInitialized && !_isDisposed)
             {
+                IsLoading = true;
                 await InitializeWebView2();
             }
         }
@@ -81,6 +103,33 @@ namespace CastorPlugin.UserControls
         private void WebView2Control_Unloaded(object sender, RoutedEventArgs e)
         {
             CleanupWebView2();
+        }
+
+        /// <summary>
+        /// IsLoading属性变更处理方法
+        /// </summary>
+        private static void OnIsLoadingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (WebView2Control)d;
+            bool isLoading = (bool)e.NewValue;
+            
+            // 在UI线程上更新加载指示器的可见性
+            control.Dispatcher.BeginInvoke(new Action(() => {
+                if (isLoading)
+                {
+                    // 取消任何正在进行的淡出操作
+                    if (control._fadeTokenSource != null)
+                    {
+                        control._fadeTokenSource.Cancel();
+                        control._fadeTokenSource.Dispose();
+                        control._fadeTokenSource = null;
+                    }
+                    
+                    control.LoadingOverlay.Opacity = 1.0;
+                    control.LoadingOverlay.Visibility = Visibility.Visible;
+                }
+                // 不在这里处理隐藏，而是在导航完成后延迟执行
+            }));
         }
 
         /// <summary>
@@ -131,6 +180,10 @@ namespace CastorPlugin.UserControls
                             {
                                 InnerWebView.CoreWebView2.Navigate(Source);
                             }
+                            else
+                            {
+                                IsLoading = false;
+                            }
                         }
 
                         _isInitialized = true;
@@ -138,12 +191,18 @@ namespace CastorPlugin.UserControls
                     catch (Core.Exceptions.WebView2RuntimeNotFoundException)
                     {
                         Log.Error("WebView2 运行时未安装。请安装 WebView2 运行时后再试。");
+                        IsLoading = false;
                         //TODO： 可以在这里提供下载链接或进一步的指导
                     }
                     catch (Exception ex)
                     {
                         Log.Error($"初始化 WebView2 时发生错误: {ex.Message}");
+                        IsLoading = false;
                     }
+                }
+                else
+                {
+                    IsLoading = false;
                 }
             }
             finally
@@ -160,6 +219,7 @@ namespace CastorPlugin.UserControls
             e.Handled = true; // 阻止新窗口打开
             if (IsAllowedOrigin(e.Uri))
             {
+                IsLoading = true;
                 InnerWebView.CoreWebView2.Navigate(e.Uri); // 在当前 WebView 中导航
             }
         }
@@ -169,9 +229,11 @@ namespace CastorPlugin.UserControls
         /// </summary>
         private void InnerWebView_NavigationStarting(object sender, CoreWebView2NavigationStartingEventArgs e)
         {
+            IsLoading = true;
             if (!IsAllowedOrigin(e.Uri))
             {
                 e.Cancel = true; // 如果不是允许的源，取消导航
+                IsLoading = false;
                 return;
             }
             Source = e.Uri;
@@ -218,6 +280,7 @@ namespace CastorPlugin.UserControls
         {
             if (InnerWebView.CoreWebView2 != null)
             {
+                IsLoading = true;
                 string url = string.IsNullOrEmpty(Source) ? "about:blank" : Source;
                 InnerWebView.CoreWebView2.Navigate(url);
             }
@@ -320,24 +383,108 @@ namespace CastorPlugin.UserControls
         }
 
         /// <summary>
+        /// 初始化加载指示器的淡出动画
+        /// </summary>
+        private void InitializeFadeAnimation()
+        {
+            var fadeOutAnimation = new DoubleAnimation
+            {
+                From = 1.0,
+                To = 0.0,
+                Duration = new Duration(TimeSpan.FromMilliseconds(300))
+            };
+            
+            fadeOutAnimation.Completed += (s, e) =>
+            {
+                LoadingOverlay.Visibility = Visibility.Collapsed;
+                LoadingOverlay.Opacity = 1.0; // 重置不透明度以便下次使用
+            };
+            
+            LoadingOverlay.Opacity = 1.0;
+            LoadingOverlay.BeginAnimation(OpacityProperty, fadeOutAnimation);
+        }
+
+        /// <summary>
         /// 添加导航完成的事件处理方法
         /// </summary>
-        private void InnerWebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
+        private async void InnerWebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             try
             {
+                // 导航完成后，延迟一段时间再隐藏加载指示器，以确保页面已渲染
+                if (_fadeTokenSource != null)
+                {
+                    _fadeTokenSource.Cancel();
+                    _fadeTokenSource.Dispose();
+                }
+                
+                _fadeTokenSource = new CancellationTokenSource();
+                var token = _fadeTokenSource.Token;
+                
+                try
+                {
+                    // 等待页面渲染
+                    await Task.Delay(RenderDelayMs, token);
+                    
+                    // 如果没有被取消，执行淡出动画
+                    if (!token.IsCancellationRequested)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() => {
+                            IsLoading = false;
+                            InitializeFadeAnimation();
+                        }));
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    // 任务被取消，不执行任何操作
+                }
+                
                 if (e.IsSuccess)
                 {
                     Log.Information($"Navigation completed successfully: {InnerWebView.Source}");
+                    
+                    // 注入CSS以防止空白屏闪烁
+                    await InjectAntiFlickerStylesAsync();
                 }
                 else
                 {
-                    Log.Warning($"Navigation failed with error: {e.WebErrorStatus}");
+                    Log.Warning($"Navigation failed with error: {e.WebErrorStatus}`");
+                    IsLoading = false;
                 }
             }
             catch (Exception ex)
             {
+                IsLoading = false;
                 Log.Error($"Error in NavigationCompleted handler: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 注入防止页面闪烁的CSS样式
+        /// </summary>
+        private async Task InjectAntiFlickerStylesAsync()
+        {
+            if (InnerWebView.CoreWebView2 != null)
+            {
+                const string script = @"
+                    (function() {
+                        if (!document.getElementById('anti-flicker-style')) {
+                            var style = document.createElement('style');
+                            style.id = 'anti-flicker-style';
+                            style.innerHTML = 'body { opacity: 1; transition: opacity 0.1s ease-in; }';
+                            document.head.appendChild(style);
+                        }
+                    })();";
+                
+                try
+                {
+                    await InnerWebView.CoreWebView2.ExecuteScriptAsync(script);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error injecting anti-flicker styles: {ex.Message}");
+                }
             }
         }
 
@@ -347,6 +494,14 @@ namespace CastorPlugin.UserControls
 
             try
             {
+                // 取消任何正在进行的淡出操作
+                if (_fadeTokenSource != null)
+                {
+                    _fadeTokenSource.Cancel();
+                    _fadeTokenSource.Dispose();
+                    _fadeTokenSource = null;
+                }
+                
                 if (InnerWebView.CoreWebView2 != null)
                 {
                     InnerWebView.CoreWebView2.NewWindowRequested -= CoreWebView2_NewWindowRequested;
@@ -356,6 +511,7 @@ namespace CastorPlugin.UserControls
                 }
 
                 InnerWebView.Source = null;
+                IsLoading = false;
                 _isDisposed = true;
             }
             catch (Exception ex)
@@ -372,6 +528,7 @@ namespace CastorPlugin.UserControls
         {
             if (!_isInitialized && !_isDisposed)
             {
+                IsLoading = true;
                 await InitializeWebView2();
             }
             
@@ -392,6 +549,8 @@ namespace CastorPlugin.UserControls
 
             try
             {
+                IsLoading = true;
+                
                 // 清理现有资源
                 CleanupWebView2();
                 
@@ -403,10 +562,18 @@ namespace CastorPlugin.UserControls
                 await InitializeWebView2();
                 
                 // 检查初始化是否成功
-                return _isInitialized;
+                bool success = _isInitialized;
+                
+                if (!success)
+                {
+                    IsLoading = false;
+                }
+                
+                return success;
             }
             catch (Exception ex)
             {
+                IsLoading = false;
                 Log.Error($"Error recovering WebView2: {ex.Message}");
                 return false;
             }

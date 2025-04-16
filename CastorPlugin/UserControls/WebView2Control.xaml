@@ -14,5 +14,23 @@
       Source="{Binding Source, RelativeSource={RelativeSource AncestorType=UserControl}}"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch" />
+      
+    <Grid x:Name="LoadingOverlay" 
+          Visibility="Collapsed" 
+          Background="#80FFFFFF" 
+          HorizontalAlignment="Stretch" 
+          VerticalAlignment="Stretch">
+      <StackPanel HorizontalAlignment="Center" 
+                  VerticalAlignment="Center">
+        <ProgressBar IsIndeterminate="True" 
+                     Width="200" 
+                     Height="15" 
+                     Margin="0,0,0,10"/>
+        <TextBlock Text="页面加载中..." 
+                   HorizontalAlignment="Center" 
+                   FontSize="14"
+                   FontWeight="Medium"/>
+      </StackPanel>
+    </Grid>
   </Grid>
 </UserControl>
