@@ -6,6 +6,9 @@ using Revit.Async;
 using System.Text.Json;
 using Wpf.Ui;
 using Wpf.Ui.Controls;
+using System.Threading;
+using System.Threading.Tasks;
+
 
 namespace CastorPlugin.ViewModels.Pages
 {
@@ -23,7 +26,10 @@ namespace CastorPlugin.ViewModels.Pages
         private int _completedCandidates;
 
         [ObservableProperty]
-        private string _webViewUrl; // 设置一个默认URL
+        private string _webViewUrl;
+
+        private bool _isWebViewInitialized;
+        private readonly SemaphoreSlim _webViewLock = new SemaphoreSlim(1, 1);
 
         public LoadingIndicator LoadingIndicator { get; set; }
         public string LastReceivedMessage { get; private set; }
@@ -182,8 +188,74 @@ namespace CastorPlugin.ViewModels.Pages
 
         public void UpdateCandidateListUrl(string documentId)
         {
-            WebViewUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
-            
+            if (string.IsNullOrEmpty(documentId))
+            {
+                Log.Warning("UpdateCandidateListUrl called with null or empty documentId");
+                return;
+            }
+
+            var newUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
+            if (WebViewUrl != newUrl)
+            {
+                WebViewUrl = newUrl;
+                Log.Information($"WebView URL updated to: {newUrl}");
+            }
+        }
+
+        partial void OnWebViewUrlChanged(string value)
+        {
+            if (!_isWebViewInitialized)
+            {
+                Log.Information("WebView not yet initialized, URL update will be handled after initialization");
+                return;
+            }
+
+            _ = UpdateWebViewUrlAsync(value);
+        }
+
+        private async Task UpdateWebViewUrlAsync(string url)
+        {
+            await _webViewLock.WaitAsync();
+            try
+            {
+                if (!_isWebViewInitialized)
+                {
+                    Log.Information("WebView not initialized, skipping URL update");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(url))
+                {
+                    Log.Warning("Attempted to update WebView with empty URL");
+                    return;
+                }
+
+                Log.Information($"Updating WebView URL to: {url}");
+                // 这里可以添加额外的URL验证逻辑
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error updating WebView URL: {ex.Message}");
+                _snackbarService.Show(
+                    "WebView Update",
+                    $"Failed to update WebView URL: {ex.Message}",
+                    ControlAppearance.Danger,
+                    new SymbolIcon(SymbolRegular.ErrorCircle24),
+                    TimeSpan.FromSeconds(5));
+            }
+            finally
+            {
+                _webViewLock.Release();
+            }
+        }
+
+        public void SetWebViewInitialized(bool initialized)
+        {
+            _isWebViewInitialized = initialized;
+            if (initialized && !string.IsNullOrEmpty(WebViewUrl))
+            {
+                _ = UpdateWebViewUrlAsync(WebViewUrl);
+            }
         }
     }
 }
