@@ -151,20 +151,25 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
     [RelayCommand]
     private async Task StartDigAsync()
     {
+        Log.Information("开始挖宝按钮被点击");
+
         if (!_authService.IsLoggedIn)
         {
+            Log.Information("挖宝失败：用户未登录");
             _notificationService.ShowWarning("请先登录", "登录后才能使用挖宝功能");
             return;
         }
 
         if (RevitApi.UiDocument is null)
         {
+            Log.Information("挖宝失败：UiDocument 为 null");
             _notificationService.ShowWarning("请先打开项目", "当前没有打开的 Revit 项目");
             return;
         }
 
         try
         {
+            Log.Information("开始挖宝流程...");
             IsDigging = true;
             HasResult = false;
             Progress = 0;
@@ -172,6 +177,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             _digCancellationTokenSource = new CancellationTokenSource();
 
             var result = await RevitTask.RunAsync(() => _digService.DigAsync(_digCancellationTokenSource.Token));
+
+            Log.Information($"挖宝完成，结果: TotalChecked={result.TotalChecked}, Posted={result.Posted}");
 
             // Update result
             TotalScanned = result.TotalChecked;
@@ -183,14 +190,17 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
         }
         catch (OperationCanceledException)
         {
+            Log.Information("挖宝操作已取消");
             _notificationService.ShowSuccess("已取消", "挖宝操作已取消");
         }
         catch (InvalidOperationException ex)
         {
+            Log.Warning($"挖宝操作无效: {ex.Message}");
             _notificationService.ShowWarning("操作无效", ex.Message);
         }
         catch (Exception ex)
         {
+            Log.Error($"挖宝失败: {ex.Message}");
             _notificationService.ShowError("挖宝失败", ex.Message);
         }
         finally
