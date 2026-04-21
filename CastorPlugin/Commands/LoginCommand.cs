@@ -20,8 +20,7 @@ namespace CastorPlugin.Commands
             var viewModel = Host.GetService<LoginViewModel>();
             var loginWindow = new Views.Pages.LoginWindow(viewModel);
 
-            // Set as modal dialog
-            loginWindow.Owner = System.Windows.Application.Current.MainWindow;
+            // Show as modal dialog (no owner in Revit context)
             loginWindow.ShowDialog();
 
             // After dialog closes, check if login was successful and refresh ribbon
