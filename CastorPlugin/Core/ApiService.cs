@@ -5,6 +5,7 @@ using Serilog;
 using System.Net.Http;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Text.Json;
 using System.Security.Cryptography;
@@ -24,6 +25,9 @@ namespace CastorPlugin.Core
     /// </summary>
     internal class ApiService
     {
+        private const int ThumbnailMinWidthPx = 640;
+        private const int ThumbnailMinHeightPx = 360;
+
         private readonly RevitFamilyExtractor _familyFingerprintExtractor;
         private readonly string _sourceDocumentId;
         private readonly string _userId;
@@ -170,12 +174,8 @@ namespace CastorPlugin.Core
                 }
             }
 
-            // Get category from family
-            string category = SanitizeFingerprintText(familyData.Category ?? "未分类");
-            if (string.IsNullOrWhiteSpace(category))
-            {
-                category = "未分类";
-            }
+            var category = NormalizeFingerprintField(familyData.Category, "未分类", 2, 80, "类");
+            var title = NormalizeRequestField(familyData.Name, $"{category}构件", 3, 120, "构件");
 
             RemoveForbiddenFingerprintEntries(keyParameters);
             if (keyParameters.Count == 0)
@@ -196,15 +196,15 @@ namespace CastorPlugin.Core
             }
 
             var thumbnail = await UploadThumbnailAsync(familyData, cancellationToken);
-            var sizeDescription = BuildSizeGeometryDescription(sizeGeometry, familyData.Name);
-            var materialDescription = BuildMaterialOrUseDescription(materialOrUse, category);
+            var sizeDescription = LimitLength(BuildSizeGeometryDescription(sizeGeometry, title), 1000);
+            var materialDescription = LimitLength(BuildMaterialOrUseDescription(materialOrUse, category), 500);
             var parameterDescription = string.Join(", ", keyParameters.Take(10).Select(kv => $"{kv.Key}={kv.Value}"));
 
             return new CreateComponentDto
             {
-                Title = familyData.Name,
+                Title = title,
                 Category = category,
-                Description = BuildDescription(familyData.Name, parameterDescription),
+                Description = LimitLength(BuildDescription(title, parameterDescription), 2000),
                 KeyAttributes = keyParameters,
                 Fingerprint = new StructuredFingerprintDto
                 {
@@ -227,6 +227,11 @@ namespace CastorPlugin.Core
                 thumbnailBytes = CreateFallbackThumbnail(familyData.Name, familyData.Category ?? "未分类");
             }
 
+            thumbnailBytes = EnsureThumbnailMinimumSize(
+                thumbnailBytes,
+                familyData.Name,
+                familyData.Category ?? "未分类");
+
             var fileName = $"{familyData.FingerPrintHash ?? Guid.NewGuid().ToString("N")}.png";
             var response = await WebServiceBroker.SendMultipartFileRequestAsync(
                 "/thumbnails/upload",
@@ -248,10 +253,10 @@ namespace CastorPlugin.Core
             return new ThumbnailInputDto
             {
                 StorageKey = uploadResponse.StorageKey,
-                MimeType = "image/png",
-                FileSizeBytes = thumbnailBytes.Length,
-                WidthPx = 200,
-                HeightPx = 200
+                MimeType = string.IsNullOrWhiteSpace(uploadResponse.MimeType) ? "image/png" : uploadResponse.MimeType,
+                FileSizeBytes = uploadResponse.FileSizeBytes > 0 ? uploadResponse.FileSizeBytes : thumbnailBytes.LongLength,
+                WidthPx = uploadResponse.WidthPx > 0 ? uploadResponse.WidthPx : ThumbnailMinWidthPx,
+                HeightPx = uploadResponse.HeightPx > 0 ? uploadResponse.HeightPx : ThumbnailMinHeightPx
             };
         }
 
@@ -275,22 +280,72 @@ namespace CastorPlugin.Core
             }
         }
 
+        private static byte[] EnsureThumbnailMinimumSize(byte[] imageBytes, string familyName, string category)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                return CreateFallbackThumbnail(familyName, category);
+            }
+
+            try
+            {
+                using (var input = new MemoryStream(imageBytes))
+                using (var source = System.Drawing.Image.FromStream(input))
+                {
+                    if (source.Width >= ThumbnailMinWidthPx && source.Height >= ThumbnailMinHeightPx)
+                    {
+                        return imageBytes;
+                    }
+
+                    using (var bitmap = new Bitmap(ThumbnailMinWidthPx, ThumbnailMinHeightPx))
+                    using (var graphics = Graphics.FromImage(bitmap))
+                    using (var backgroundBrush = new SolidBrush(System.Drawing.Color.FromArgb(244, 247, 250)))
+                    using (var stream = new MemoryStream())
+                    {
+                        graphics.Clear(System.Drawing.Color.White);
+                        graphics.FillRectangle(backgroundBrush, 0, 0, ThumbnailMinWidthPx, ThumbnailMinHeightPx);
+                        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        graphics.SmoothingMode = SmoothingMode.HighQuality;
+                        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                        const int padding = 20;
+                        var scale = Math.Min(
+                            (ThumbnailMinWidthPx - padding * 2) / (double)source.Width,
+                            (ThumbnailMinHeightPx - padding * 2) / (double)source.Height);
+                        var drawWidth = (int)Math.Round(source.Width * scale);
+                        var drawHeight = (int)Math.Round(source.Height * scale);
+                        var drawX = (ThumbnailMinWidthPx - drawWidth) / 2;
+                        var drawY = (ThumbnailMinHeightPx - drawHeight) / 2;
+
+                        graphics.DrawImage(source, drawX, drawY, drawWidth, drawHeight);
+                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                        return stream.ToArray();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"缩略图尺寸规范化失败，改用兜底缩略图: {ex.Message}");
+                return CreateFallbackThumbnail(familyName, category);
+            }
+        }
+
         private static byte[] CreateFallbackThumbnail(string familyName, string category)
         {
-            using (var bitmap = new Bitmap(200, 200))
+            using (var bitmap = new Bitmap(ThumbnailMinWidthPx, ThumbnailMinHeightPx))
             using (var graphics = Graphics.FromImage(bitmap))
             using (var backgroundBrush = new SolidBrush(System.Drawing.Color.FromArgb(244, 247, 250)))
             using (var accentBrush = new SolidBrush(System.Drawing.Color.FromArgb(43, 102, 214)))
             using (var textBrush = new SolidBrush(System.Drawing.Color.FromArgb(32, 36, 42)))
-            using (var titleFont = new Font(SystemFonts.DefaultFont.FontFamily, 13, FontStyle.Bold))
-            using (var bodyFont = new Font(SystemFonts.DefaultFont.FontFamily, 10, FontStyle.Regular))
+            using (var titleFont = new Font(SystemFonts.DefaultFont.FontFamily, 22, FontStyle.Bold))
+            using (var bodyFont = new Font(SystemFonts.DefaultFont.FontFamily, 16, FontStyle.Regular))
             using (var stream = new MemoryStream())
             {
                 graphics.Clear(System.Drawing.Color.White);
-                graphics.FillRectangle(backgroundBrush, 0, 0, 200, 200);
-                graphics.FillRectangle(accentBrush, 0, 0, 200, 8);
-                graphics.DrawString(TrimForThumbnail(category), titleFont, textBrush, new RectangleF(16, 42, 168, 28));
-                graphics.DrawString(TrimForThumbnail(familyName), bodyFont, textBrush, new RectangleF(16, 82, 168, 80));
+                graphics.FillRectangle(backgroundBrush, 0, 0, ThumbnailMinWidthPx, ThumbnailMinHeightPx);
+                graphics.FillRectangle(accentBrush, 0, 0, ThumbnailMinWidthPx, 12);
+                graphics.DrawString(TrimForThumbnail(category), titleFont, textBrush, new RectangleF(40, 92, 560, 48));
+                graphics.DrawString(TrimForThumbnail(familyName), bodyFont, textBrush, new RectangleF(40, 154, 560, 120));
                 bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
                 return stream.ToArray();
             }
@@ -345,6 +400,38 @@ namespace CastorPlugin.Core
             }
 
             return ContainsForbiddenFingerprintText(value) ? "参数化构件信息" : value.Trim();
+        }
+
+        private static string NormalizeFingerprintField(string value, string fallback, int minLength, int maxLength, string padSuffix)
+        {
+            return NormalizeRequestField(SanitizeFingerprintText(value), fallback, minLength, maxLength, padSuffix);
+        }
+
+        private static string NormalizeRequestField(string value, string fallback, int minLength, int maxLength, string padSuffix)
+        {
+            var text = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                text = fallback;
+            }
+
+            var suffix = string.IsNullOrEmpty(padSuffix) ? "构件" : padSuffix;
+            while (text.Length < minLength)
+            {
+                text += suffix;
+            }
+
+            return LimitLength(text, maxLength);
+        }
+
+        private static string LimitLength(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+            {
+                return value;
+            }
+
+            return value.Substring(0, maxLength);
         }
 
         private static bool ContainsForbiddenFingerprintText(string value)
@@ -496,6 +583,10 @@ namespace CastorPlugin.Core
     {
         public string StorageKey { get; set; }
         public string Url { get; set; }
+        public string MimeType { get; set; }
+        public long FileSizeBytes { get; set; }
+        public int WidthPx { get; set; }
+        public int HeightPx { get; set; }
     }
 
     /// <summary>

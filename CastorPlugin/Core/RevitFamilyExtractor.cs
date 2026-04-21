@@ -271,7 +271,7 @@ namespace CastorPlugin.Core
         /// <returns>A base64-encoded string representation of the thumbnail image.</returns>
         private string ExtractFamilySymbolPreviewThumbnail(FamilySymbol familySymbol)
         {
-            System.Drawing.Size size = new System.Drawing.Size(200, 200);
+            System.Drawing.Size size = new System.Drawing.Size(640, 360);
             using (Bitmap image = familySymbol.GetPreviewImage(size))
             {
                 if (image != null)
@@ -359,7 +359,7 @@ namespace CastorPlugin.Core
                     value = e?.Name ?? id.ToString();
                     break;
                 case StorageType.Integer:
-                    value = t.AsInteger(fp).ToString(CultureInfo.InvariantCulture);
+                    value = t.AsInteger(fp)?.ToString(CultureInfo.InvariantCulture) ?? "0";
                     break;
                 case StorageType.String:
                     value = t.AsString(fp);
