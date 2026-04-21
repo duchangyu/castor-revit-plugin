@@ -7,17 +7,40 @@ using System.Drawing;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using CastorPlugin.Services.DTO; 
+using CastorPlugin.Services.DTO;
 using CastorPlugin.Utils;
 
 namespace CastorPlugin.Core
 {
     /// <summary>
+    /// Represents extracted family data for component registration
+    /// </summary>
+    public class FamilyExtractionData
+    {
+        public string Name { get; set; }
+        public string Category { get; set; }
+        public string FingerPrintHash { get; set; }
+        public string FingerPrintJson { get; set; }
+        public string ThumbnailBase64 { get; set; }
+        public GeometryBoundingBoxData GeometryBoundingBox { get; set; }
+        public Dictionary<string, Dictionary<string, string>> ParameterCharacteristics { get; set; } = new Dictionary<string, Dictionary<string, string>>();
+    }
+
+    /// <summary>
+    /// Geometry bounding box data
+    /// </summary>
+    public class GeometryBoundingBoxData
+    {
+        public double Width { get; set; }
+        public double Depth { get; set; }
+        public double Height { get; set; }
+    }
+
+    /// <summary>
     /// Represents a fingerprint of a Revit family, containing its properties and methods for extraction and processing.
     /// </summary>
     public class RevitFamilyExtractor
     {
-
         #region private members
         /// <summary>
         /// Gets the type of asset, which is always "RevitFamily" for this class.
@@ -27,23 +50,27 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Gets or sets the name of the asset (family).
         /// </summary>
-        private string _assetName { get;  set; }
+        private string _assetName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the category of the asset (family).
+        /// </summary>
+        private string _assetCategory { get; set; }
 
         /// <summary>
         /// Gets or sets the thumbnail image of the family as a base64-encoded string.
         /// </summary>
-        private string _thumbnail { get;  set; }
+        private string _thumbnail { get; set; }
 
         /// <summary>
         /// Gets or sets the SHA256 hash of the fingerprint JSON.
         /// </summary>
-        private string _fingerPrintHash { get;  set; }
+        private string _fingerPrintHash { get; set; }
 
         /// <summary>
         /// Gets or sets the JSON representation of the fingerprint.
         /// </summary>
-        private string _fingerPrintInJson { get;  set; }
+        private string _fingerPrintInJson { get; set; }
 
         /// <summary>
         /// Gets a dictionary of parameter characteristics for each family type.
@@ -55,6 +82,10 @@ namespace CastorPlugin.Core
         /// </summary>
         private Dictionary<string, Dictionary<string, object>> _geometryCharacteristics { get; } = new Dictionary<string, Dictionary<string, object>>();
 
+        /// <summary>
+        /// Geometry bounding box data
+        /// </summary>
+        private GeometryBoundingBoxData _boundingBox { get; set; }
 
         // Private fields
         /// <summary>
@@ -76,22 +107,38 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Extracts all eligible families from the Revit document and processes them.
         /// </summary>
-        /// <returns>An IEnumerable of NftWorksCandidates representing the processed families.</returns>
-        public IEnumerable<NftWorksCandidates> ExtractFamilies()
+        /// <returns>An IEnumerable of FamilyExtractionData representing the processed families.</returns>
+        public IEnumerable<FamilyExtractionData> ExtractFamilyData()
         {
             var collector = new FilteredElementCollector(_document).OfClass(typeof(Family));
-            
+
             foreach (Family family in collector)
             {
                 if (ShouldProcessFamily(family))
                 {
+                    Reset();
                     ExtractFamilyData(family);
-                    yield return CreateNftCandidate();
+                    yield return CreateFamilyExtractionData();
                 }
             }
         }
 
-        #region private fucntions 
+        /// <summary>
+        /// Reset extraction data for next family
+        /// </summary>
+        private void Reset()
+        {
+            _assetName = null;
+            _assetCategory = null;
+            _thumbnail = null;
+            _fingerPrintHash = null;
+            _fingerPrintInJson = null;
+            _parameterCharacteristics.Clear();
+            _geometryCharacteristics.Clear();
+            _boundingBox = null;
+        }
+
+        #region private functions
 
         /// <summary>
         /// Extracts all relevant data from a given family, including geometry characteristics.
@@ -105,6 +152,16 @@ namespace CastorPlugin.Core
             ExtractGeometryCharacteristics(family);
             GenerateFingerPrintJson();
             GenerateFingerPrintHash();
+
+            // Get category from family
+            if (family.FamilyCategory != null)
+            {
+                _assetCategory = family.FamilyCategory.Name ?? "未分类";
+            }
+            else
+            {
+                _assetCategory = "未分类";
+            }
         }
 
         /// <summary>
@@ -150,18 +207,20 @@ namespace CastorPlugin.Core
         }
 
         /// <summary>
-        /// Creates an NftWorksCandidate object from the extracted family data.
+        /// Creates a FamilyExtractionData object from the extracted family data.
         /// </summary>
-        /// <returns>An NftWorksCandidate object representing the processed family.</returns>
-        private NftWorksCandidates CreateNftCandidate()
+        /// <returns>A FamilyExtractionData object representing the processed family.</returns>
+        private FamilyExtractionData CreateFamilyExtractionData()
         {
-            return new NftWorksCandidates
+            return new FamilyExtractionData
             {
                 Name = _assetName,
-                Type = 1, // REVIT Family
+                Category = _assetCategory,
                 FingerPrintHash = _fingerPrintHash,
-                FingerPrintInJson = _fingerPrintInJson,
-                Thumbnail = _thumbnail
+                FingerPrintJson = _fingerPrintInJson,
+                ThumbnailBase64 = _thumbnail,
+                GeometryBoundingBox = _boundingBox,
+                ParameterCharacteristics = new Dictionary<string, Dictionary<string, string>>(_parameterCharacteristics)
             };
         }
 
@@ -216,8 +275,6 @@ namespace CastorPlugin.Core
             }
         }
 
-
-
         /// <summary>
         /// Retrieves a dictionary of family parameters from a FamilyManager.
         /// </summary>
@@ -254,7 +311,7 @@ namespace CastorPlugin.Core
             }
             catch (Exception ex)
             {
-                // Log error or handle exception as needed
+                Log.Warning($"获取族参数失败: {ex.Message}");
             }
 
             return result;
@@ -263,10 +320,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Retrieves the string representation of a family parameter value.
         /// </summary>
-        /// <param name="t">The family type.</param>
-        /// <param name="fp">The family parameter.</param>
-        /// <param name="doc">The document containing the family.</param>
-        /// <returns>The string representation of the family parameter value.</returns>
         private static string FamilyParamValueString(FamilyType t, FamilyParameter fp, Document doc)
         {
             string value = t.AsValueString(fp);
@@ -293,24 +346,18 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Retrieves a description of an element.
         /// </summary>
-        /// <param name="e">The element to describe.</param>
-        /// <returns>A string description of the element.</returns>
         private static string ElementDescription(Element e)
         {
             if (null == e) return "<null>";
-
             FamilyInstance fi = e as FamilyInstance;
             string fn = (null == fi) ? string.Empty : fi.Symbol.Family.Name + " ";
             string cn = (null == e.Category) ? e.GetType().Name : e.Category.Name;
-
             return string.Format("{0} {1}<{2} {3}>", cn, fn, e.Id.ToString(), e.Name);
         }
 
         /// <summary>
         /// Formats a double value as a string with a maximum of two decimal places.
         /// </summary>
-        /// <param name="a">The double value to format.</param>
-        /// <returns>The formatted string representation of the double value.</returns>
         private static string RealString(double a)
         {
             return a.ToString("0.##");
@@ -319,9 +366,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Adds a type parameter to the fingerprint.
         /// </summary>
-        /// <param name="typeName">The name of the family type.</param>
-        /// <param name="parameterName">The name of the parameter.</param>
-        /// <param name="value">The value of the parameter.</param>
         private void AddTypeParameter(string typeName, string parameterName, string value)
         {
             if (!_parameterCharacteristics.ContainsKey(typeName))
@@ -334,7 +378,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Converts the fingerprint to a JSON string.
         /// </summary>
-        /// <returns>The JSON representation of the fingerprint.</returns>
         private string ToJson()
         {
             var fingerPrintDict = new Dictionary<string, object>
@@ -343,6 +386,7 @@ namespace CastorPlugin.Core
                 {
                     ["AssetType"] = _assetType,
                     ["AssetName"] = _assetName,
+                    ["AssetCategory"] = _assetCategory,
                     ["ParameterCharacteristics"] = _parameterCharacteristics,
                     ["GeometryCharacteristics"] = _geometryCharacteristics
                 }
@@ -357,8 +401,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Sorts a JSON node recursively.
         /// </summary>
-        /// <param name="node">The JSON node to sort.</param>
-        /// <returns>The sorted JSON node.</returns>
         private JsonNode SortJsonNode(JsonNode node)
         {
             if (node is JsonObject obj)
@@ -383,30 +425,31 @@ namespace CastorPlugin.Core
             {
                 return JsonValue.Create(val.GetValue<object>());
             }
-
-            // Return the original node if it's not an object, array, or value
             return node;
         }
-
 
         /// <summary>
         /// Determines whether a family should be processed based on certain criteria.
         /// </summary>
-        /// <param name="family">The family to check.</param>
-        /// <returns>True if the family should be processed, false otherwise.</returns>
         public bool ShouldProcessFamily(Family family)
         {
-            BuiltInCategory familyCategory = (BuiltInCategory)family.FamilyCategory.Id.Value;
-            return family.IsEditable 
-                && !IsCommonCategory(familyCategory)
-                && family.GetFamilySymbolIds().Count > 0;
+            BuiltInCategory? categoryValue = null;
+            if (family.FamilyCategory?.Id != null)
+            {
+                categoryValue = (BuiltInCategory)family.FamilyCategory.Id.Value;
+            }
+
+            if (categoryValue.HasValue && IsCommonCategory(categoryValue.Value))
+            {
+                return false;
+            }
+
+            return family.IsEditable && family.GetFamilySymbolIds().Count > 0;
         }
 
         /// <summary>
-        /// Checks if a given category is considered a common category that should be excluded from processing.
+        /// Checks if a given category is considered a common category.
         /// </summary>
-        /// <param name="category">The category to check.</param>
-        /// <returns>True if the category is common, false otherwise.</returns>
         private bool IsCommonCategory(BuiltInCategory category)
         {
             return new HashSet<BuiltInCategory>
@@ -430,9 +473,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Extracts parameters from a specific family type.
         /// </summary>
-        /// <param name="t">The family type to extract parameters from.</param>
-        /// <param name="fps">A dictionary of family parameters.</param>
-        /// <param name="familyDocument">The family document.</param>
         private void ExtractTypeParameters(FamilyType t, Dictionary<string, FamilyParameter> fps, Document familyDocument)
         {
             foreach (var fp in fps.Values)
@@ -448,7 +488,6 @@ namespace CastorPlugin.Core
         /// <summary>
         /// Extracts geometry characteristics from a family.
         /// </summary>
-        /// <param name="family">The family to extract geometry from.</param>
         private void ExtractGeometryCharacteristics(Family family)
         {
             foreach (ElementId symbolId in family.GetFamilySymbolIds())
@@ -458,36 +497,41 @@ namespace CastorPlugin.Core
                 {
                     try
                     {
-                        // Try to get geometry
                         GeometryElement geomElem = null;
                         try
                         {
-                            geomElem = symbol.get_Geometry(
-                                new Options {
-                                    ComputeReferences = true, 
-                                    DetailLevel = ViewDetailLevel.Fine,
-                                    IncludeNonVisibleObjects = false});
+                            geomElem = symbol.get_Geometry(new Options
+                            {
+                                ComputeReferences = true,
+                                DetailLevel = ViewDetailLevel.Fine,
+                                IncludeNonVisibleObjects = false
+                            });
                         }
                         catch (Exception ex)
                         {
                             Log.Warning($"Unable to get geometry for symbol '{symbol.Name}': {ex.Message}");
                         }
 
-                        // If we successfully got geometry, extract the data
                         if (geomElem != null)
                         {
                             var geometryData = new Dictionary<string, object>();
                             ExtractGeometryData(symbol.Name, geomElem, geometryData);
 
-                            // Only add to GeometryCharacteristics if we extracted some data
                             if (geometryData.Count > 0)
                             {
                                 _geometryCharacteristics[symbol.Name] = geometryData;
                             }
-                        }
-                        else
-                        {
-                            Log.Information($"No geometry data available for symbol '{symbol.Name}'. Skipping geometry extraction.");
+
+                            var bbox = geomElem.GetBoundingBox();
+                            if (bbox != null)
+                            {
+                                _boundingBox = new GeometryBoundingBoxData
+                                {
+                                    Width = Math.Abs(bbox.Max.X - bbox.Min.X),
+                                    Depth = Math.Abs(bbox.Max.Y - bbox.Min.Y),
+                                    Height = Math.Abs(bbox.Max.Z - bbox.Min.Z)
+                                };
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -499,64 +543,36 @@ namespace CastorPlugin.Core
         }
 
         /// <summary>
-        /// Extracts geometry data from a GeometryElement and adds it to the geometryData dictionary.
+        /// Extracts geometry data from a GeometryElement.
         /// </summary>
-        /// <param name="symbolName">The name of the symbol being processed.</param>
-        /// <param name="geomElem">The GeometryElement to extract data from.</param>
-        /// <param name="geometryData">The dictionary to store the extracted geometry data.</param>
         private void ExtractGeometryData(string symbolName, GeometryElement geomElem, Dictionary<string, object> geometryData)
         {
             try
             {
-                geometryData["BoundingBox"] = ExtractBoundingBoxData(geomElem.GetBoundingBox());
+                var bbox = geomElem.GetBoundingBox();
+                if (bbox != null)
+                {
+                    geometryData["BoundingBox"] = ExtractBoundingBoxData(bbox);
+                }
             }
             catch (Exception ex)
             {
                 Log.Error($"Error extracting BoundingBox for symbol '{symbolName}': {ex.Message}");
             }
 
-            try
-            {
-                geometryData["SurfaceArea"] = CalculateSurfaceArea(geomElem);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error calculating SurfaceArea for symbol '{symbolName}': {ex.Message}");
-            }
+            try { geometryData["SurfaceArea"] = CalculateSurfaceArea(geomElem); }
+            catch (Exception ex) { Log.Error($"Error calculating SurfaceArea: {ex.Message}"); }
 
-            try
-            {
-                geometryData["Volume"] = CalculateVolume(geomElem);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error calculating Volume for symbol '{symbolName}': {ex.Message}");
-            }
+            try { geometryData["Volume"] = CalculateVolume(geomElem); }
+            catch (Exception ex) { Log.Error($"Error calculating Volume: {ex.Message}"); }
 
-            try
-            {
-                geometryData["FaceCount"] = CountFaces(geomElem);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error counting Faces for symbol '{symbolName}': {ex.Message}");
-            }
+            try { geometryData["FaceCount"] = CountFaces(geomElem); }
+            catch (Exception ex) { Log.Error($"Error counting Faces: {ex.Message}"); }
 
-            try
-            {
-                geometryData["VertexCount"] = CountVertices(geomElem);
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error counting Vertices for symbol '{symbolName}': {ex.Message}");
-            }
+            try { geometryData["VertexCount"] = CountVertices(geomElem); }
+            catch (Exception ex) { Log.Error($"Error counting Vertices: {ex.Message}"); }
         }
 
-        /// <summary>
-        /// Extracts bounding box data from a BoundingBoxXYZ object.
-        /// </summary>
-        /// <param name="boundingBox">The BoundingBoxXYZ to extract data from.</param>
-        /// <returns>A dictionary containing the width, depth, and height of the bounding box.</returns>
         private Dictionary<string, double> ExtractBoundingBoxData(BoundingBoxXYZ boundingBox)
         {
             return new Dictionary<string, double>
@@ -567,11 +583,6 @@ namespace CastorPlugin.Core
             };
         }
 
-        /// <summary>
-        /// Calculates the total surface area of all solids in a GeometryElement.
-        /// </summary>
-        /// <param name="geomElem">The GeometryElement to calculate surface area for.</param>
-        /// <returns>The total surface area of all solids in the GeometryElement.</returns>
         private double CalculateSurfaceArea(GeometryElement geomElem)
         {
             double surfaceArea = 0;
@@ -588,11 +599,6 @@ namespace CastorPlugin.Core
             return surfaceArea;
         }
 
-        /// <summary>
-        /// Calculates the total volume of all solids in a GeometryElement.
-        /// </summary>
-        /// <param name="geomElem">The GeometryElement to calculate volume for.</param>
-        /// <returns>The total volume of all solids in the GeometryElement.</returns>
         private double CalculateVolume(GeometryElement geomElem)
         {
             double volume = 0;
@@ -606,11 +612,6 @@ namespace CastorPlugin.Core
             return volume;
         }
 
-        /// <summary>
-        /// Counts the total number of faces in all solids in a GeometryElement.
-        /// </summary>
-        /// <param name="geomElem">The GeometryElement to count faces for.</param>
-        /// <returns>The total number of faces in all solids in the GeometryElement.</returns>
         private int CountFaces(GeometryElement geomElem)
         {
             int faceCount = 0;
@@ -624,11 +625,6 @@ namespace CastorPlugin.Core
             return faceCount;
         }
 
-        /// <summary>
-        /// Counts the total number of unique vertices in all solids in a GeometryElement.
-        /// </summary>
-        /// <param name="geomElem">The GeometryElement to count vertices for.</param>
-        /// <returns>The total number of unique vertices in all solids in the GeometryElement.</returns>
         private int CountVertices(GeometryElement geomElem)
         {
             HashSet<XYZ> uniqueVertices = new HashSet<XYZ>();
@@ -646,6 +642,5 @@ namespace CastorPlugin.Core
             return uniqueVertices.Count;
         }
         #endregion
-
     }
 }
