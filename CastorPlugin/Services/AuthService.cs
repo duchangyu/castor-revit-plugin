@@ -33,11 +33,11 @@ namespace CastorPlugin.Services
             try
             {
                 var apiUrl = WebServiceBroker.GetFullUrl("/auth/sms/send-code");
-                Log.Information($"Sending verification code to phone: {phone}, URL: {apiUrl}");
+                Log.Information($"Sending verification code to phone: {MaskPhone(phone)}, URL: {apiUrl}");
                 var response = await WebServiceBroker.SendPostRequestAsync(
                     "/auth/sms/send-code",
                     new { phone });
-                Log.Information($"Send code response: {response}");
+                Log.Information($"Send code response received: {!string.IsNullOrEmpty(response)}");
                 return !string.IsNullOrEmpty(response);
             }
             catch (Exception ex)
@@ -108,6 +108,16 @@ namespace CastorPlugin.Services
             _settingsService.Save();
             WebServiceBroker.ClearAccessToken();
             OnAuthStateChanged?.Invoke();
+        }
+
+        private static string MaskPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone) || phone.Length < 7)
+            {
+                return "<redacted>";
+            }
+
+            return $"{phone.Substring(0, 3)}****{phone.Substring(phone.Length - 4)}";
         }
     }
 }

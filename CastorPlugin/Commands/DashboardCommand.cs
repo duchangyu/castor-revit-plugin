@@ -19,9 +19,11 @@
 // (Rights in Technical Data and Computer Software), as applicable.
 
 using Autodesk.Revit.Attributes;
+using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
 using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
+using Revit.Async;
 
 namespace CastorPlugin.Commands;
 
@@ -31,6 +33,9 @@ public class DashboardCommand : ExternalCommand
 {
     public override void Execute()
     {
+        // Dashboard actions use RevitTask.RunAsync; initialize while still in Revit API context.
+        RevitTask.Initialize(RevitApi.UiApplication);
+
         Host.GetService<ICastorService>().Show<DashboardView>();
     }
 }

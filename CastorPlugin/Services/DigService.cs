@@ -66,7 +66,7 @@ namespace CastorPlugin.Services
                 Log.Information($"Total Checked: {result.TotalChecked}, Posted: {result.Posted}");
 
                 // Fire completion event
-                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.TotalChecked - result.Posted);
+                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.Skipped);
 
                 // Update the extracted documents dictionary with the latest extraction time
                 _extractedDocuments[documentId] = lastModified;
@@ -109,7 +109,7 @@ namespace CastorPlugin.Services
                 if (!ShouldExtractDocument(documentId, lastModified))
                 {
                     Log.Information("Document has not changed since last extraction. Skipping.");
-                    return new ExtractionResult { TotalChecked = 0, Posted = 0 };
+                    return new ExtractionResult { TotalChecked = 0, Posted = 0, Skipped = 0, Failed = 0 };
                 }
 
                 var userId = _settingsService.CurrentUser?.Id;
@@ -124,7 +124,7 @@ namespace CastorPlugin.Services
                 Log.Information($"Total Checked: {result.TotalChecked}, Posted: {result.Posted}");
 
                 // Fire completion event
-                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.TotalChecked - result.Posted);
+                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.Skipped);
 
                 // Update extracted documents dictionary
                 _extractedDocuments[documentId] = lastModified;

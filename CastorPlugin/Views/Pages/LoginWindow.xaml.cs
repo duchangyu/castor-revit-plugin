@@ -23,6 +23,12 @@ namespace CastorPlugin.Views.Pages
             Close();
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            _viewModel.LoginSucceeded -= OnLoginSucceeded;
+            base.OnClosed(e);
+        }
+
         public void Dispose()
         {
             _viewModel.LoginSucceeded -= OnLoginSucceeded;

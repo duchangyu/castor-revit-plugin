@@ -183,9 +183,11 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             // Update result
             TotalScanned = result.TotalChecked;
             NewRegistered = result.Posted;
-            SimilarSkipped = result.TotalChecked - result.Posted;
+            SimilarSkipped = result.Skipped;
             HasResult = true;
-            ResultMessage = $"扫描了 {result.TotalChecked} 个族\n新增登记 {result.Posted} 个\n相似跳过 {result.TotalChecked - result.Posted} 个";
+            ResultMessage = result.Failed > 0
+                ? $"扫描了 {result.TotalChecked} 个族\n新增登记 {result.Posted} 个\n相似跳过 {result.Skipped} 个\n失败 {result.Failed} 个"
+                : $"扫描了 {result.TotalChecked} 个族\n新增登记 {result.Posted} 个\n相似跳过 {result.Skipped} 个";
             _notificationService.ShowSuccess("挖宝完成", ResultMessage);
         }
         catch (OperationCanceledException)

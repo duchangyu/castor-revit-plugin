@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Linq;
@@ -114,11 +115,26 @@ namespace CastorPlugin.Core
 
             foreach (Family family in collector)
             {
-                if (ShouldProcessFamily(family))
+                FamilyExtractionData data = null;
+                try
                 {
+                    if (!ShouldProcessFamily(family))
+                    {
+                        continue;
+                    }
+
                     Reset();
                     ExtractFamilyData(family);
-                    yield return CreateFamilyExtractionData();
+                    data = CreateFamilyExtractionData();
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning($"族 {family?.Name ?? "<unknown>"} 提取失败，已跳过: {ex.Message}");
+                }
+
+                if (data != null)
+                {
+                    yield return data;
                 }
             }
         }
@@ -147,21 +163,22 @@ namespace CastorPlugin.Core
         private void ExtractFamilyData(Family family)
         {
             _assetName = family.Name;
-            ExtractFamilyParameters(family);
-            ExtractThumbnail(family);
-            ExtractGeometryCharacteristics(family);
-            GenerateFingerPrintJson();
-            GenerateFingerPrintHash();
 
-            // Get category from family
+            // Category participates in the fingerprint, so it must be set before JSON generation.
             if (family.FamilyCategory != null)
             {
                 _assetCategory = family.FamilyCategory.Name ?? "未分类";
             }
             else
             {
-                _assetCategory = "未分类";
+                _assetCategory = GetCategoryFromFirstSymbol(family) ?? "未分类";
             }
+
+            ExtractFamilyParameters(family);
+            ExtractThumbnail(family);
+            ExtractGeometryCharacteristics(family);
+            GenerateFingerPrintJson();
+            GenerateFingerPrintHash();
         }
 
         /// <summary>
@@ -170,18 +187,25 @@ namespace CastorPlugin.Core
         /// <param name="family">The family to extract parameters from.</param>
         private void ExtractFamilyParameters(Family family)
         {
-            using (Document familyDocument = _document.EditFamily(family))
+            try
             {
-                if (familyDocument.IsFamilyDocument)
+                using (Document familyDocument = _document.EditFamily(family))
                 {
-                    var mgr = familyDocument.FamilyManager;
-                    var fps = GetFamilyParameters(mgr);
-
-                    foreach (FamilyType t in mgr.Types)
+                    if (familyDocument.IsFamilyDocument)
                     {
-                        ExtractTypeParameters(t, fps, familyDocument);
+                        var mgr = familyDocument.FamilyManager;
+                        var fps = GetFamilyParameters(mgr);
+
+                        foreach (FamilyType t in mgr.Types)
+                        {
+                            ExtractTypeParameters(t, fps, familyDocument);
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"族 {family.Name} 参数提取失败: {ex.Message}");
             }
         }
 
@@ -248,16 +272,15 @@ namespace CastorPlugin.Core
         private string ExtractFamilySymbolPreviewThumbnail(FamilySymbol familySymbol)
         {
             System.Drawing.Size size = new System.Drawing.Size(200, 200);
-            Bitmap image = familySymbol.GetPreviewImage(size);
+            using (Bitmap image = familySymbol.GetPreviewImage(size))
+            {
+                if (image != null)
+                {
+                    return ImageToBase64(image);
+                }
+            }
 
-            if (image != null)
-            {
-                return ImageToBase64(image);
-            }
-            else
-            {
-                return string.Empty;
-            }
+            return string.Empty;
         }
 
         /// <summary>
@@ -326,21 +349,23 @@ namespace CastorPlugin.Core
             switch (fp.StorageType)
             {
                 case StorageType.Double:
-                    value = RealString((double)t.AsDouble(fp)) + " (double)";
+                    value = string.IsNullOrWhiteSpace(value)
+                        ? RealString((double)t.AsDouble(fp))
+                        : value;
                     break;
                 case StorageType.ElementId:
                     ElementId id = t.AsElementId(fp);
                     Element e = doc.GetElement(id);
-                    value = id.ToString() + " (" + ElementDescription(e) + ")";
+                    value = e?.Name ?? id.ToString();
                     break;
                 case StorageType.Integer:
-                    value = t.AsInteger(fp).ToString() + " (int)";
+                    value = t.AsInteger(fp).ToString(CultureInfo.InvariantCulture);
                     break;
                 case StorageType.String:
-                    value = "'" + t.AsString(fp) + "' (string)";
+                    value = t.AsString(fp);
                     break;
             }
-            return value;
+            return value ?? string.Empty;
         }
 
         /// <summary>
@@ -360,7 +385,7 @@ namespace CastorPlugin.Core
         /// </summary>
         private static string RealString(double a)
         {
-            return a.ToString("0.##");
+            return a.ToString("0.##", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -433,41 +458,22 @@ namespace CastorPlugin.Core
         /// </summary>
         public bool ShouldProcessFamily(Family family)
         {
-            BuiltInCategory? categoryValue = null;
-            if (family.FamilyCategory?.Id != null)
-            {
-                categoryValue = (BuiltInCategory)family.FamilyCategory.Id.Value;
-            }
-
-            if (categoryValue.HasValue && IsCommonCategory(categoryValue.Value))
-            {
-                return false;
-            }
-
             return family.IsEditable && family.GetFamilySymbolIds().Count > 0;
         }
 
-        /// <summary>
-        /// Checks if a given category is considered a common category.
-        /// </summary>
-        private bool IsCommonCategory(BuiltInCategory category)
+        private string GetCategoryFromFirstSymbol(Family family)
         {
-            return new HashSet<BuiltInCategory>
+            foreach (ElementId symbolId in family.GetFamilySymbolIds())
             {
-                BuiltInCategory.OST_Walls,
-                BuiltInCategory.OST_Floors,
-                BuiltInCategory.OST_Roofs,
-                BuiltInCategory.OST_Columns,
-                BuiltInCategory.OST_CurtainWallPanels,
-                BuiltInCategory.OST_CurtainWallMullions,
-                BuiltInCategory.OST_Doors,
-                BuiltInCategory.OST_Windows,
-                BuiltInCategory.OST_Railings,
-                BuiltInCategory.OST_Stairs,
-                BuiltInCategory.OST_Ramps,
-                BuiltInCategory.OST_ShaftOpening,
-                BuiltInCategory.OST_Ceilings
-            }.Contains(category);
+                var symbol = _document.GetElement(symbolId) as FamilySymbol;
+                var category = symbol?.Category?.Name;
+                if (!string.IsNullOrWhiteSpace(category))
+                {
+                    return category;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

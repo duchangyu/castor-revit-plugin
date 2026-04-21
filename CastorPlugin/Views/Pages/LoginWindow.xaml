@@ -9,7 +9,7 @@
   Title="登录 Castor"
   Width="420"
   Height="520"
-  WindowStartupLocation="CenterOwner"
+  WindowStartupLocation="CenterScreen"
   ResizeMode="NoResize"
   ShowInTaskbar="False"
   Background="#F8FAFC"
