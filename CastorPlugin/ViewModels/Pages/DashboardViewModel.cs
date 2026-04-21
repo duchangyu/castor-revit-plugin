@@ -20,6 +20,8 @@
 
 using CastorPlugin.Core;
 using CastorPlugin.Services;
+using Nice3point.Revit.Extensions;
+using Revit.Async;
 using CastorPlugin.Services.Contracts;
 using CastorPlugin.ViewModels.Contracts;
 using CastorPlugin.Views.Pages;
@@ -169,7 +171,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             CurrentFamilyName = "准备开始...";
             _digCancellationTokenSource = new CancellationTokenSource();
 
-            var result = await _digService.DigAsync(_digCancellationTokenSource.Token);
+            var result = await RevitTask.RunAsync(() => _digService.DigAsync(_digCancellationTokenSource.Token));
 
             // Update result
             TotalScanned = result.TotalChecked;

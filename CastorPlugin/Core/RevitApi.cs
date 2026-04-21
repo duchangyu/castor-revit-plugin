@@ -121,13 +121,18 @@ public static class RevitApi
         elementIdIdType.SetValue(elementId, builtInParameter);
 
         var handle = GCHandle.Alloc(elementId);
-        var elementIdPointer = GCHandle.ToIntPtr(handle);
-        Marshal.StructureToPtr(elementId, elementIdPointer, true);
+        try
+        {
+            var elementIdPointer = GCHandle.ToIntPtr(handle);
+            Marshal.StructureToPtr(elementId, elementIdPointer, true);
 
-        var parameter = (Parameter) parameterCtorType.Invoke([getADocumentType.Invoke(Document, null), elementIdPointer]);
-        handle.Free();
-
-        return parameter;
+            var parameter = (Parameter) parameterCtorType.Invoke([getADocumentType.Invoke(Document, null), elementIdPointer]);
+            return parameter;
+        }
+        finally
+        {
+            handle.Free();
+        }
     }
 
     public static Category GetBuiltinCategory(BuiltInCategory builtInCategory)
@@ -147,13 +152,18 @@ public static class RevitApi
         elementIdIdType.SetValue(elementId, builtInCategory);
 
         var handle = GCHandle.Alloc(elementId);
-        var elementIdPointer = GCHandle.ToIntPtr(handle);
-        Marshal.StructureToPtr(elementId, elementIdPointer, true);
+        try
+        {
+            var elementIdPointer = GCHandle.ToIntPtr(handle);
+            Marshal.StructureToPtr(elementId, elementIdPointer, true);
 
-        var category = (Category) categoryCtorType.Invoke([getADocumentType.Invoke(Document, null), elementIdPointer]);
-        handle.Free();
-
-        return category;
+            var category = (Category) categoryCtorType.Invoke([getADocumentType.Invoke(Document, null), elementIdPointer]);
+            return category;
+        }
+        finally
+        {
+            handle.Free();
+        }
     }
 
 
