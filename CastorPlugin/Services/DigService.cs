@@ -147,23 +147,22 @@ namespace CastorPlugin.Services
         {
             string title = document.Title;
             string pathName = document.PathName;
-            string documentId = String.Empty;
+            string documentId;
 
             // For unsaved documents, PathName will be empty
             if (string.IsNullOrEmpty(pathName))
             {
-                documentId =  $"Unsaved_{title}";
+                documentId = $"Unsaved_{title}";
             }
-
-            // For saved documents, combine title and full path
-            documentId =  $"{title}_{pathName}";
+            else
+            {
+                documentId = $"{title}_{pathName}";
+            }
 
             //convert to sha256
             documentId = Utils.Util.ConvertToSha256(documentId);
 
-
             return documentId;
-
         }
 
         /// <summary>

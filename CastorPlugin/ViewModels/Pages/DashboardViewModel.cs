@@ -32,7 +32,7 @@ using Wpf.Ui;
 
 namespace CastorPlugin.ViewModels.Pages;
 
-public sealed partial class DashboardViewModel : ObservableObject, IDashboardViewModel
+public sealed partial class DashboardViewModel : ObservableObject, IDashboardViewModel, IDisposable
 {
     private readonly IAuthService _authService;
     private readonly IDigService _digService;
@@ -207,4 +207,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
 
     public IAsyncRelayCommand<string> NavigateSnoopPageCommand { get; }
     public IAsyncRelayCommand<string> OpenDialogCommand { get; }
+
+    public void Dispose()
+    {
+        _authService.OnAuthStateChanged -= OnAuthStateChanged;
+        _digService.ProgressChanged -= OnDigProgressChanged;
+        _digService.DigCompleted -= OnDigCompleted;
+        _digCancellationTokenSource?.Cancel();
+        _digCancellationTokenSource?.Dispose();
+    }
 }
