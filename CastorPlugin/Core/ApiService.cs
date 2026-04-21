@@ -26,7 +26,7 @@ namespace CastorPlugin.Core
     {
         private readonly RevitFamilyExtractor _familyFingerprintExtractor;
         private readonly string _sourceDocumentId;
-        private readonly int? _userId;
+        private readonly string _userId;
 
         /// <summary>
         /// Event triggered when a new candidate is posted to the server.
@@ -44,7 +44,7 @@ namespace CastorPlugin.Core
         /// <param name="document">The Revit document to extract families from.</param>
         /// <param name="documentId">The ID of the source document.</param>
         /// <param name="userId">The ID of the logged-in user (optional).</param>
-        public ApiService(Document document, string documentId, int? userId = null)
+        public ApiService(Document document, string documentId, string userId = null)
         {
             _familyFingerprintExtractor = new RevitFamilyExtractor(document);
             _sourceDocumentId = documentId;

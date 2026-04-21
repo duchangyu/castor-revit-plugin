@@ -60,15 +60,19 @@ namespace CastorPlugin.Services
 
                 var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
                 var result = JsonSerializer.Deserialize<AuthResultDto>(response, options);
+                var accessToken = result?.GetAccessToken();
 
-                if (result?.Session != null)
+                if (!string.IsNullOrEmpty(accessToken))
                 {
-                    _settingsService.AccessToken = result.Session.AccessToken;
-                    _settingsService.CurrentUser = result.User;
-                    _settingsService.TokenExpiry = DateTime.Now.AddSeconds(result.Session.ExpiresIn);
+                    _settingsService.AccessToken = accessToken;
+                    _settingsService.CurrentUser = result.GetUser();
+                    var expiresIn = result.GetExpiresIn();
+                    _settingsService.TokenExpiry = expiresIn.HasValue
+                        ? DateTime.Now.AddSeconds(expiresIn.Value)
+                        : null;
                     _settingsService.Save();
 
-                    WebServiceBroker.SetAccessToken(result.Session.AccessToken);
+                    WebServiceBroker.SetAccessToken(accessToken);
                     OnAuthStateChanged?.Invoke();
                 }
 

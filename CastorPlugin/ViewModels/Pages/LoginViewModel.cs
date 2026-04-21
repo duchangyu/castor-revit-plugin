@@ -87,7 +87,7 @@ namespace CastorPlugin.ViewModels.Pages
             try
             {
                 var result = await _authService.LoginAsync(Phone, Code);
-                if (result?.Session != null)
+                if (!string.IsNullOrEmpty(result?.GetAccessToken()))
                 {
                     LoginSucceeded?.Invoke();
                 }
