@@ -32,6 +32,11 @@ namespace CastorPlugin.Core
         public event Action? CandidatePosted;
 
         /// <summary>
+        /// Event triggered when a family is being processed. Parameters: (familyName, checkedCount)
+        /// </summary>
+        public event Action<string, int>? ProgressChanged;
+
+        /// <summary>
         /// Initializes a new instance of the FamilyExtractor class.
         /// </summary>
         /// <param name="document">The Revit document to extract families from.</param>
@@ -57,7 +62,12 @@ namespace CastorPlugin.Core
             // Iterate through each NFT candidate extracted from the Revit families
             foreach (var nftCandidate in _familyFingerprintExtractor.ExtractFamilies())
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 totalChecked++;
+
+                // Fire progress event
+                ProgressChanged?.Invoke(nftCandidate.Name, totalChecked);
 
                 // Associate with logged-in user
                 nftCandidate.UserId = _userId;

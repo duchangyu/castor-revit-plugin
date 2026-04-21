@@ -17,6 +17,10 @@ namespace CastorPlugin.Services
 
         public event Action CandidatePosted;
 
+        // Progress events from IDigService
+        public event Action<int, int, string> ProgressChanged; // (scanned, total, currentFamilyName) - total=0 means unknown
+        public event Action<int, int, int> DigCompleted; // (totalScanned, newRegistered, similarSkipped)
+
         public DigService(ISettingsService settingsService)
         {
             _settingsService = settingsService;
@@ -52,18 +56,80 @@ namespace CastorPlugin.Services
 
                 var userId = _settingsService.CurrentUser?.Id;
                 ApiService familyExtractorApiService = new ApiService(document, documentId, userId);
-                
+
                 familyExtractorApiService.CandidatePosted += () => CandidatePosted?.Invoke();
+                familyExtractorApiService.ProgressChanged += (name, count) => ProgressChanged?.Invoke(count, 0, name);
 
                 // Perform the extraction
                 var result = await familyExtractorApiService.ExtractFamilies(cancellationToken);
 
                 Log.Information($"Total Checked: {result.TotalChecked}, Posted: {result.Posted}");
 
+                // Fire completion event
+                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.TotalChecked - result.Posted);
+
                 // Update the extracted documents dictionary with the latest extraction time
                 _extractedDocuments[documentId] = lastModified;
 
                 return documentId;
+            }
+            catch (OperationCanceledException)
+            {
+                Log.Information("Dig operation was cancelled.");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error in Dig: {ex.Message}");
+                throw;
+            }
+        }
+
+        // DigAsync returns ExtractionResult for progress tracking
+        public async Task<ExtractionResult> DigAsync(CancellationToken cancellationToken)
+        {
+            // SECURITY: Ensure user is logged in before allowing dig
+            if (!_settingsService.IsLoggedIn)
+            {
+                Log.Warning("Dig operation blocked: user not authenticated");
+                throw new InvalidOperationException("请先登录后再使用此功能");
+            }
+
+            try
+            {
+                var document = RevitApi.Document;
+                var documentId = GetUniqueDocumentId(document);
+
+                Log.Information($"Processing document: {documentId}");
+
+                // Get the document's last modified time
+                DateTime lastModified = GetDocumentLastModifiedTime(document);
+
+                // Check if the document needs to be extracted
+                if (!ShouldExtractDocument(documentId, lastModified))
+                {
+                    Log.Information("Document has not changed since last extraction. Skipping.");
+                    return new ExtractionResult { TotalChecked = 0, Posted = 0 };
+                }
+
+                var userId = _settingsService.CurrentUser?.Id;
+                ApiService familyExtractorApiService = new ApiService(document, documentId, userId);
+
+                familyExtractorApiService.CandidatePosted += () => CandidatePosted?.Invoke();
+                familyExtractorApiService.ProgressChanged += (name, count) => ProgressChanged?.Invoke(count, 0, name);
+
+                // Perform the extraction
+                var result = await familyExtractorApiService.ExtractFamilies(cancellationToken);
+
+                Log.Information($"Total Checked: {result.TotalChecked}, Posted: {result.Posted}");
+
+                // Fire completion event
+                DigCompleted?.Invoke(result.TotalChecked, result.Posted, result.TotalChecked - result.Posted);
+
+                // Update extracted documents dictionary
+                _extractedDocuments[documentId] = lastModified;
+
+                return result;
             }
             catch (OperationCanceledException)
             {

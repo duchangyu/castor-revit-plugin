@@ -39,6 +39,12 @@ namespace CastorPlugin.Views.Pages
         {
             // 通知 ViewModel WebView 不再可用
             ViewModel.SetWebViewInitialized(false);
+            
+            // 确保清理WebView2资源
+            if (webView != null)
+            {
+                webView.CleanupWebView2();
+            }
         }
 
         private async Task InitializeWebView()
