@@ -32,7 +32,8 @@ namespace CastorPlugin.Services
         {
             try
             {
-                Log.Information($"Sending verification code to phone: {phone}");
+                var apiUrl = WebServiceBroker.GetFullUrl("/auth/sms/send-code");
+                Log.Information($"Sending verification code to phone: {phone}, URL: {apiUrl}");
                 var response = await WebServiceBroker.SendPostRequestAsync(
                     "/auth/sms/send-code",
                     new { phone });

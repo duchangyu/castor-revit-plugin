@@ -75,11 +75,18 @@ public class WebServiceBroker
             };
 
             var json = JsonSerializer.Serialize(data, options);
-            Log.Information($"POST {client.BaseAddress}{endpoint} - Body: {json}");
+            var fullUrl = $"{client.BaseAddress}{endpoint}";
+            Log.Information($"POST {fullUrl} - Body: {json}");
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(endpoint, content, cancellationToken);
             var responseBody = await response.Content.ReadAsStringAsync();
             Log.Information($"POST response status: {response.StatusCode}, body: {responseBody}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Log.Error($"HTTP error: {response.StatusCode} for URL: {fullUrl}");
+            }
+
             response.EnsureSuccessStatusCode();
             return responseBody;
         }
