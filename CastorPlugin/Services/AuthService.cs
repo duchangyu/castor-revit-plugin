@@ -1,0 +1,110 @@
+using CastorPlugin.Services.Contracts;
+using CastorPlugin.Services.DTO;
+using CastorPlugin.Utils;
+using System;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+namespace CastorPlugin.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly ISettingsService _settingsService;
+        private readonly SemaphoreSlim _loginLock = new SemaphoreSlim(1, 1);
+
+        public AuthService(ISettingsService settingsService)
+        {
+            _settingsService = settingsService;
+            // Restore token on construction if available
+            if (_settingsService.IsLoggedIn)
+            {
+                WebServiceBroker.SetAccessToken(_settingsService.AccessToken);
+            }
+        }
+
+        public event Action OnAuthStateChanged;
+
+        public bool IsLoggedIn => _settingsService.IsLoggedIn;
+
+        public UserDto CurrentUser => _settingsService.CurrentUser;
+
+        public async Task<bool> SendVerificationCodeAsync(string phone)
+        {
+            try
+            {
+                var response = await WebServiceBroker.SendPostRequestAsync(
+                    "/auth/sms/send-code",
+                    new { phone });
+                return !string.IsNullOrEmpty(response);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to send verification code: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<AuthResultDto> LoginAsync(string phone, string code)
+        {
+            await _loginLock.WaitAsync();
+            try
+            {
+                var response = await WebServiceBroker.SendPostRequestAsync(
+                    "/auth/sms/login",
+                    new { phone, code });
+
+                if (string.IsNullOrEmpty(response)) return null;
+
+                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                var result = JsonSerializer.Deserialize<AuthResultDto>(response, options);
+
+                if (result?.Session != null)
+                {
+                    _settingsService.AccessToken = result.Session.AccessToken;
+                    _settingsService.CurrentUser = result.User;
+                    _settingsService.TokenExpiry = DateTime.Now.AddSeconds(result.Session.ExpiresIn);
+                    _settingsService.Save();
+
+                    WebServiceBroker.SetAccessToken(result.Session.AccessToken);
+                    OnAuthStateChanged?.Invoke();
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Login failed: {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                _loginLock.Release();
+            }
+        }
+
+        public async Task<UserDto> GetCurrentUserAsync()
+        {
+            try
+            {
+                var response = await WebServiceBroker.SendGetRequestAsync("/auth/me");
+                if (string.IsNullOrEmpty(response)) return null;
+
+                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+                return JsonSerializer.Deserialize<UserDto>(response, options);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Failed to get current user: {ex.Message}");
+                return null;
+            }
+        }
+
+        public void Logout()
+        {
+            _settingsService.ClearAuth();
+            _settingsService.Save();
+            WebServiceBroker.ClearAccessToken();
+            OnAuthStateChanged?.Invoke();
+        }
+    }
+}

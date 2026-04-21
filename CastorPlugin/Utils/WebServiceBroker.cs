@@ -12,21 +12,42 @@ public class WebServiceBroker
 {
     private static readonly HttpClient client = new HttpClient();
     private static ISettingsService _settingsService;
+    private static string _accessToken;
 
     public static void Initialize(ISettingsService settingsService)
     {
         _settingsService = settingsService;
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        
+
         Console.WriteLine($"Initializing WebServiceBroker with ApiUrl: {_settingsService.ApiUrl}");
-        
+
         if (string.IsNullOrEmpty(_settingsService.ApiUrl))
         {
             throw new InvalidOperationException("ApiUrl is not set in the settings.");
         }
-        
+
         client.BaseAddress = new Uri(_settingsService.ApiUrl);
+
+        // Restore token if exists
+        if (!string.IsNullOrEmpty(_settingsService.AccessToken))
+        {
+            SetAccessToken(_settingsService.AccessToken);
+        }
     }
+
+    public static void SetAccessToken(string token)
+    {
+        _accessToken = token;
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    }
+
+    public static void ClearAccessToken()
+    {
+        _accessToken = null;
+        client.DefaultRequestHeaders.Authorization = null;
+    }
+
+    public static bool HasAccessToken => !string.IsNullOrEmpty(_accessToken);
 
     public static async Task<string> SendGetRequestAsync(string endpoint, CancellationToken cancellationToken = default)
     {

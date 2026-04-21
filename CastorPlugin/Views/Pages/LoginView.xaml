@@ -1,0 +1,86 @@
+<Page
+  x:Class="CastorPlugin.Views.Pages.LoginView"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:vm="clr-namespace:CastorPlugin.ViewModels.Pages"
+  xmlns:converters="clr-namespace:CastorPlugin.ViewModels.Converters"
+  xmlns:wui="clr-namespace:Wpf.Ui.Controls;assembly=Wpf.Ui"
+  Title="登录"
+  d:DesignHeight="350"
+  d:DesignWidth="400"
+  d:DataContext="{d:DesignInstance Type=vm:LoginViewModel}"
+  mc:Ignorable="d">
+
+  <Page.Resources>
+    <converters:BoolVisibilityConverter x:Key="BoolToVisConverter" />
+    <converters:InverseBoolVisibilityConverter x:Key="InverseBoolToVisConverter" />
+    <converters:InverseBooleanConverter x:Key="InverseBoolConverter" />
+  </Page.Resources>
+
+  <StackPanel Margin="20">
+    <TextBlock
+      Text="登录 Castor"
+      FontSize="24"
+      FontWeight="Bold"
+      Margin="0,0,0,20" />
+
+    <!-- Phone Input -->
+    <TextBlock Text="手机号" Margin="0,0,0,5" />
+    <TextBox
+      x:Name="PhoneTextBox"
+      Margin="0,0,0,15"
+      Text="{Binding Phone, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+    <!-- Send Code Button -->
+    <Button
+      Content="发送验证码"
+      Command="{Binding SendCodeCommand}"
+      IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+      Margin="0,0,0,15"
+      HorizontalAlignment="Stretch" />
+
+    <!-- Verification Code Section (visible after code sent) -->
+    <StackPanel Visibility="{Binding IsCodeSent, Converter={StaticResource BoolToVisConverter}}">
+      <TextBlock Text="验证码" Margin="0,0,0,5" />
+      <TextBox
+        x:Name="CodeTextBox"
+        Margin="0,0,0,15"
+        Text="{Binding Code, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+      <!-- Login Button -->
+      <Button
+        Content="登录"
+        Command="{Binding LoginCommand}"
+        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolConverter}}"
+        Margin="0,0,0,15"
+        HorizontalAlignment="Stretch"
+        Background="#0078D4"
+        Foreground="White" />
+
+      <!-- Resend Link -->
+      <Button
+        Content="重新发送验证码"
+        Command="{Binding ResendCodeCommand}"
+        HorizontalAlignment="Center"
+        Margin="0,0,0,10"
+        Style="{StaticResource {x:Type Button}}" />
+    </StackPanel>
+
+    <!-- Loading indicator -->
+    <ProgressBar
+      IsIndeterminate="True"
+      Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
+      Margin="0,10,0,0"
+      HorizontalAlignment="Stretch" />
+
+    <!-- Error message -->
+    <TextBlock
+      Text="{Binding ErrorMessage}"
+      Foreground="Red"
+      Visibility="{Binding HasError, Converter={StaticResource BoolToVisConverter}}"
+      TextWrapping="Wrap"
+      Margin="0,10,0,0" />
+  </StackPanel>
+</Page>

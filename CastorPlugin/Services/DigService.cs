@@ -8,26 +8,36 @@ namespace CastorPlugin.Services
 {
     public sealed class DigService : IDigService
     {
-     
+
         // Thread-safe dictionary to store the last extraction time for each document
         private static readonly ConcurrentDictionary<string, DateTime> _extractedDocuments = new ConcurrentDictionary<string, DateTime>();
+        private readonly ISettingsService _settingsService;
 
         Action IDigService.CandidatePosted { get; set; }
 
         public event Action CandidatePosted;
 
-        public DigService( )
+        public DigService(ISettingsService settingsService)
         {
-            
+            _settingsService = settingsService;
         }
+
+        public bool IsAuthenticated => _settingsService.IsLoggedIn;
 
         public async Task<string> Dig(CancellationToken cancellationToken)
         {
+            // SECURITY: Ensure user is logged in before allowing dig
+            if (!_settingsService.IsLoggedIn)
+            {
+                Log.Warning("Dig operation blocked: user not authenticated");
+                throw new InvalidOperationException("请先登录后再使用此功能");
+            }
+
             try
             {
                 var document = RevitApi.Document;
                 var documentId = GetUniqueDocumentId(document);
-                
+
                 Log.Information($"Processing document: {documentId}");
 
                 // Get the document's last modified time
@@ -40,7 +50,8 @@ namespace CastorPlugin.Services
                     return documentId;
                 }
 
-                ApiService familyExtractorApiService = new ApiService(document, documentId);
+                var userId = _settingsService.CurrentUser?.Id;
+                ApiService familyExtractorApiService = new ApiService(document, documentId, userId);
                 
                 familyExtractorApiService.CandidatePosted += () => CandidatePosted?.Invoke();
 

@@ -24,6 +24,7 @@ namespace CastorPlugin.Core
     {
         private readonly RevitFamilyExtractor _familyFingerprintExtractor;
         private readonly string _sourceDocumentId;
+        private readonly int? _userId;
 
         /// <summary>
         /// Event triggered when a new candidate is posted to the server.
@@ -35,10 +36,12 @@ namespace CastorPlugin.Core
         /// </summary>
         /// <param name="document">The Revit document to extract families from.</param>
         /// <param name="documentId">The ID of the source document.</param>
-        public ApiService(Document document, string documentId)
+        /// <param name="userId">The ID of the logged-in user (optional).</param>
+        public ApiService(Document document, string documentId, int? userId = null)
         {
             _familyFingerprintExtractor = new RevitFamilyExtractor(document);
             _sourceDocumentId = documentId;
+            _userId = userId;
         }
 
         /// <summary>
@@ -55,6 +58,9 @@ namespace CastorPlugin.Core
             foreach (var nftCandidate in _familyFingerprintExtractor.ExtractFamilies())
             {
                 totalChecked++;
+
+                // Associate with logged-in user
+                nftCandidate.UserId = _userId;
 
                 // Check if the fingerprint already exists on the server
                 bool exists = await FingerprintExists(nftCandidate.FingerPrintHash);

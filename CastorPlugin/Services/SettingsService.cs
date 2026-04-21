@@ -1,5 +1,6 @@
 ﻿using Autodesk.Internal.InfoCenter;
 using CastorPlugin.Services.Contracts;
+using CastorPlugin.Services.DTO;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -29,6 +30,10 @@ namespace CastorPlugin.Services
         [JsonPropertyName("WindowWidth")] public double WindowWidth { get; set; }
         [JsonPropertyName("WindowHeight")] public double WindowHeight { get; set; }
         [JsonPropertyName("ApiUrl")] public string ApiUrl {get;set;}
+        [JsonPropertyName("AccessToken")] public string AccessToken { get; set; }
+        [JsonPropertyName("RefreshToken")] public string RefreshToken { get; set; }
+        [JsonPropertyName("TokenExpiry")] public DateTime? TokenExpiry { get; set; }
+        [JsonPropertyName("CurrentUser")] public UserDto CurrentUser { get; set; }
         //[JsonPropertyName("IsUnsupportedAllowed")] public bool IncludeUnsupported { get; set; }
         //[JsonPropertyName("IsPrivateAllowed")] public bool IncludePrivate { get; set; }
         //[JsonPropertyName("IsStaticAllowed")] public bool IncludeStatic { get; set; }
@@ -116,7 +121,41 @@ namespace CastorPlugin.Services
             get => _settings.ApiUrl;
             set => _settings.ApiUrl = value;
         }
-   
+
+        public string AccessToken
+        {
+            get => _settings.AccessToken;
+            set => _settings.AccessToken = value;
+        }
+
+        public string RefreshToken
+        {
+            get => _settings.RefreshToken;
+            set => _settings.RefreshToken = value;
+        }
+
+        public DateTime? TokenExpiry
+        {
+            get => _settings.TokenExpiry;
+            set => _settings.TokenExpiry = value;
+        }
+
+        public UserDto CurrentUser
+        {
+            get => _settings.CurrentUser;
+            set => _settings.CurrentUser = value;
+        }
+
+        public bool IsLoggedIn => !string.IsNullOrEmpty(_settings.AccessToken);
+
+        public void ClearAuth()
+        {
+            _settings.AccessToken = null;
+            _settings.RefreshToken = null;
+            _settings.TokenExpiry = null;
+            _settings.CurrentUser = null;
+        }
+
         public int ApplyTransition(bool value)
         {
             return TransitionDuration = value ? DefaultTransitionDuration : 0;

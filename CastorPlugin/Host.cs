@@ -49,6 +49,7 @@ namespace CastorPlugin
             builder.Services.AddSingleton<ISettingsService, SettingsService>();
             builder.Services.AddSingleton<ISoftwareUpdateService, SoftwareUpdateService>();
             builder.Services.AddSingleton<IDigService, DigService>();
+            builder.Services.AddSingleton<IAuthService, AuthService>();
          
 
             //UI services
@@ -68,6 +69,8 @@ namespace CastorPlugin
             builder.Services.AddScoped<SettingsViewModel>();
             builder.Services.AddScoped<DigView>();
             builder.Services.AddScoped<DigViewModel>();
+            builder.Services.AddScoped<LoginView>();
+            builder.Services.AddScoped<LoginViewModel>();
 
 
             builder.Services.AddScoped<IWindow, CastorMainWindowView>();

@@ -28,6 +28,11 @@ namespace CastorPlugin.Services.DTO
         /// </summary>
         public string Thumbnail { get; set; } // base64表示的asset对象的缩略图
 
+        /// <summary>
+        /// 获取或设置关联的用户ID。
+        /// </summary>
+        public int? UserId { get; set; }
+
         ///// <summary>
         ///// 获取或设置一个值，指示该资产是否已被抢占。
         ///// </summary>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using CastorPlugin.Services.DTO;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 
@@ -22,6 +23,14 @@ namespace CastorPlugin.Services.Contracts
         void Save();
 
         string ApiUrl { get; set; }
+
+        string AccessToken { get; set; }
+        string RefreshToken { get; set; }
+        DateTime? TokenExpiry { get; set; }
+        UserDto CurrentUser { get; set; }
+        bool IsLoggedIn { get; }
+
+        void ClearAuth();
 
         string GetLandingPageUrl();
     }

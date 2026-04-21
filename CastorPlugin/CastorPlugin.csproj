@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <UseWPF>true</UseWPF>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
     <ImplicitUsings>true</ImplicitUsings>
     <TargetFramework>net48</TargetFramework>
@@ -15,7 +15,7 @@
     <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration.Contains('Release'))">
-    <Optimize>true</Optimize>
+    <Optimize>False</Optimize>
     <DebugType>none</DebugType>
     <SharingType>Publish</SharingType>
     <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>

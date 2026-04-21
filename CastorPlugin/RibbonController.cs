@@ -21,6 +21,17 @@ namespace CastorPlugin
            
             pullButton.AddPushButton<StartCommand>("开始");
             pullButton.AddPushButton<DashboardCommand>("Dashboard");
+
+            // Dynamic login/logout button based on auth state
+            if (settingsService.IsLoggedIn && settingsService.CurrentUser != null)
+            {
+                pullButton.AddPushButton<LogoutCommand>($"注销 ({settingsService.CurrentUser.Phone})");
+            }
+            else
+            {
+                pullButton.AddPushButton<LoginCommand>("登录");
+            }
+
             pullButton.AddPushButton<AboutCommand>("关于我们");
 
             //var showButton = panel.AddPushButton<StartCommand>("ShowWpfWin");

@@ -4,6 +4,8 @@
     {
         Action CandidatePosted { get; set; }
 
+        bool IsAuthenticated { get; }
+
         Task<string> Dig(CancellationToken cancellationToken);
 
         Task<int> FetchCandidateCountAsync();
