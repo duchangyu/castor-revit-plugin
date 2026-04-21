@@ -29,6 +29,8 @@ namespace CastorPlugin.ViewModels.Pages
         [ObservableProperty]
         private bool _hasError;
 
+        public event Action LoginSucceeded;
+
         public LoginViewModel(IAuthService authService)
         {
             _authService = authService;
@@ -87,7 +89,7 @@ namespace CastorPlugin.ViewModels.Pages
                 var result = await _authService.LoginAsync(Phone, Code);
                 if (result?.Session != null)
                 {
-                    // Login successful - dialog will close via calling code
+                    LoginSucceeded?.Invoke();
                 }
                 else
                 {
