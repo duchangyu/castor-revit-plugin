@@ -396,7 +396,7 @@ namespace CastorPlugin.Core
         /// <returns>True if the family should be processed, false otherwise.</returns>
         public bool ShouldProcessFamily(Family family)
         {
-            BuiltInCategory familyCategory = (BuiltInCategory)family.FamilyCategory.Id.IntegerValue;
+            BuiltInCategory familyCategory = (BuiltInCategory)family.FamilyCategory.Id.Value;
             return family.IsEditable 
                 && !IsCommonCategory(familyCategory)
                 && family.GetFamilySymbolIds().Count > 0;
