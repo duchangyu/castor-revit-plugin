@@ -32,9 +32,11 @@ namespace CastorPlugin.Services
         {
             try
             {
+                Log.Information($"Sending verification code to phone: {phone}");
                 var response = await WebServiceBroker.SendPostRequestAsync(
                     "/auth/sms/send-code",
                     new { phone });
+                Log.Information($"Send code response: {response}");
                 return !string.IsNullOrEmpty(response);
             }
             catch (Exception ex)

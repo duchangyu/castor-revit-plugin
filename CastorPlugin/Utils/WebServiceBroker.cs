@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CastorPlugin.Services.Contracts;
+using Serilog;
 
 public class WebServiceBroker
 {
@@ -74,14 +75,17 @@ public class WebServiceBroker
             };
 
             var json = JsonSerializer.Serialize(data, options);
+            Log.Information($"POST {client.BaseAddress}{endpoint} - Body: {json}");
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             var response = await client.PostAsync(endpoint, content, cancellationToken);
+            var responseBody = await response.Content.ReadAsStringAsync();
+            Log.Information($"POST response status: {response.StatusCode}, body: {responseBody}");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsStringAsync();
+            return responseBody;
         }
         catch (HttpRequestException ex)
         {
-            Console.WriteLine($"Request error: {ex.Message}");
+            Log.Error($"HTTP Request error: {ex.Message}");
             return null;
         }
     }
