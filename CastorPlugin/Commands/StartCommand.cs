@@ -16,6 +16,11 @@ public class StartCommand : ExternalCommand
     public override void Execute()
     {
         // Always initialize RevitTask ahead of time within Revit API context
+        if (RevitApi.UiApplication == null)
+        {
+            RevitApi.UiApplication = UiApplication;
+        }
+
         RevitTask.Initialize(RevitApi.UiApplication);
 
         Host.GetService<ICastorService>().Show<DigView>();

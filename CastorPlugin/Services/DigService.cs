@@ -39,7 +39,7 @@ namespace CastorPlugin.Services
 
             try
             {
-                var document = RevitApi.Document;
+                var document = GetActiveDocument();
                 var documentId = GetUniqueDocumentId(document);
 
                 Log.Information($"Processing document: {documentId}");
@@ -97,7 +97,7 @@ namespace CastorPlugin.Services
 
             try
             {
-                var document = RevitApi.Document;
+                var document = GetActiveDocument();
                 var documentId = GetUniqueDocumentId(document);
 
                 Log.Information($"Processing document: {documentId}");
@@ -141,6 +141,11 @@ namespace CastorPlugin.Services
                 Log.Error($"Error in Dig: {ex.Message}");
                 throw;
             }
+        }
+
+        private static Autodesk.Revit.DB.Document GetActiveDocument()
+        {
+            return RevitApi.Document ?? throw new InvalidOperationException("请先打开一个 Revit 项目后再开始挖宝");
         }
 
         private string GetUniqueDocumentId(Autodesk.Revit.DB.Document document)

@@ -162,9 +162,9 @@ public sealed class CastorService : ICastorService
         {
             _serviceScope = scopeFactory.CreateScope();
 
-            _window = (Window) _serviceScope.ServiceProvider.GetService<IWindow>();
+            _window = (Window) _serviceScope.ServiceProvider.GetRequiredService<IWindow>();
             //_visualService = _serviceScope.ServiceProvider.GetService<ISnoopVisualService>();
-            _navigationService = _serviceScope.ServiceProvider.GetService<INavigationService>();
+            _navigationService = _serviceScope.ServiceProvider.GetRequiredService<INavigationService>();
 
             _window.Closed += (_, _) => _serviceScope.Dispose();
         }
@@ -186,7 +186,7 @@ public sealed class CastorService : ICastorService
 
         public void DependsOn(IServiceProvider provider)
         {
-            _owner = (Window) provider.GetService<IWindow>();
+            _owner = (Window) provider.GetRequiredService<IWindow>();
         }
 
         public void Show<T>() where T : Page
@@ -197,7 +197,7 @@ public sealed class CastorService : ICastorService
             }
             else
             {
-                _activeTask = _activeTask.ContinueWith(_ => ShowPage<T>(), TaskScheduler.FromCurrentSynchronizationContext());
+                _activeTask = _activeTask.ContinueWith(_ => _dispatcher.Invoke(() => ShowPage<T>()));
             }
         }
 
@@ -209,7 +209,7 @@ public sealed class CastorService : ICastorService
             }
             else
             {
-                _activeTask = _activeTask.ContinueWith(_ => InvokeHandler(handler), TaskScheduler.FromCurrentSynchronizationContext());
+                _activeTask = _activeTask.ContinueWith(_ => _dispatcher.Invoke(() => InvokeHandler(handler)));
             }
         }
 
@@ -231,7 +231,10 @@ public sealed class CastorService : ICastorService
                 _window.Top = _owner.Top + 49;
             }
 
-            _window.Show(RevitApi.UiApplication.MainWindowHandle);
+            var uiApplication = RevitApi.UiApplication
+                ?? throw new InvalidOperationException("Revit UI application is not initialized.");
+
+            _window.Show(uiApplication.MainWindowHandle);
             _navigationService.Navigate(typeof(T));
         }
     }

@@ -106,7 +106,7 @@ public sealed class NotificationService(ISnackbarService snackbarService, IWindo
     private void ShowPendingNotifications(object sender, RoutedEventArgs args)
     {
         window.Loaded -= ShowPendingNotifications;
-        _pendingNotifications.Invoke();
+        _pendingNotifications?.Invoke();
         _pendingNotifications = null;
     }
 }

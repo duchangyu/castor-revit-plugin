@@ -1,12 +1,8 @@
 ﻿using Autodesk.Revit.Attributes;
+using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
 using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CastorPlugin.Commands
 {
@@ -16,6 +12,10 @@ namespace CastorPlugin.Commands
     {
         public override void Execute()
         {
+            if (RevitApi.UiApplication == null)
+            {
+                RevitApi.UiApplication = UiApplication;
+            }
 
             Host.GetService<ICastorService>()
                 .Show<AboutView>();

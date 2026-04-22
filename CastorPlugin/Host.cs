@@ -107,12 +107,17 @@ namespace CastorPlugin
 
         public static T GetService<T>() where T : class
         {
-            return _host.Services.GetService(typeof(T)) as T;
+            if (_host is null)
+            {
+                throw new InvalidOperationException("Castor host has not been started.");
+            }
+
+            return _host.Services.GetRequiredService<T>();
         }
 
         public static T GetService<T>(this IServiceProvider serviceProvider) where T : class
         {
-            return serviceProvider.GetService(typeof(T)) as T;
+            return serviceProvider.GetRequiredService<T>();
         }
 
 

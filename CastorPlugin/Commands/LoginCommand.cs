@@ -15,6 +15,11 @@ namespace CastorPlugin.Commands
     {
         public override void Execute()
         {
+            if (RevitApi.UiApplication == null)
+            {
+                RevitApi.UiApplication = UiApplication;
+            }
+
             RevitTask.Initialize(RevitApi.UiApplication);
 
             var viewModel = Host.GetService<LoginViewModel>();

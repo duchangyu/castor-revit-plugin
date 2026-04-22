@@ -34,6 +34,11 @@ public class DashboardCommand : ExternalCommand
     public override void Execute()
     {
         // Dashboard actions use RevitTask.RunAsync; initialize while still in Revit API context.
+        if (RevitApi.UiApplication == null)
+        {
+            RevitApi.UiApplication = UiApplication;
+        }
+
         RevitTask.Initialize(RevitApi.UiApplication);
 
         Host.GetService<ICastorService>().Show<DashboardView>();

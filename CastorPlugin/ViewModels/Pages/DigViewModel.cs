@@ -127,11 +127,15 @@ namespace CastorPlugin.ViewModels.Pages
             {
                 LoadingIndicator.ShowSuccessImage();
                 CompletedCandidates++;
-                Task.Delay(1000).ContinueWith(_ =>
-                {
-                    LoadingIndicator.ShowDefaultImage();
-                }, TaskScheduler.FromCurrentSynchronizationContext());
             });
+
+            _ = ResetLoadingIndicatorAsync();
+        }
+
+        private async Task ResetLoadingIndicatorAsync()
+        {
+            await Task.Delay(1000);
+            _castorService.Execute<object>(_ => LoadingIndicator.ShowDefaultImage());
         }
 
         public async Task UpdateDigCounts()
