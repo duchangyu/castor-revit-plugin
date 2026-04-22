@@ -31,7 +31,7 @@ namespace CastorPlugin.UserControls
 
         public void ShowSuccessImage()
         {
-            CurrentImage = new BitmapImage(new Uri("pack://application:,,,/CastorPlugin;component/Resources/Images/dig-success.png"));
+            CurrentImage = new BitmapImage(new Uri("pack://application:,,,/CastorPlugin;component/Resources/Images/dig-sucess.png"));
         }
 
         public void ShowDefaultImage()

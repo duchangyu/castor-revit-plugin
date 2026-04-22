@@ -126,7 +126,7 @@
       FontSize="24"
       FontWeight="Bold"
       Foreground="White"
-      Text="Digging..." />
+      Text="正在挖宝石..." />
   </Grid>
 
   <UserControl.Triggers>

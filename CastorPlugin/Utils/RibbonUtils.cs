@@ -77,10 +77,47 @@ public static class RibbonUtils
 
         //Remove internal history.
         //RibbonItemDictionary used to block RibbonItem re-creation
+        RemoveRibbonItemDictionaryEntry(tab.Id, panelName);
+    }
+
+    public static void RemovePanelByTitle(string panelTitle)
+    {
+        foreach (RibbonTab tab in ComponentManager.Ribbon.Tabs)
+        {
+            RibbonPanel panelToRemove = null;
+            foreach (RibbonPanel panel in tab.Panels)
+            {
+                if (string.Equals(panel.Source?.Title, panelTitle, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(panel.Source?.Id, panelTitle, StringComparison.OrdinalIgnoreCase))
+                {
+                    panelToRemove = panel;
+                    break;
+                }
+            }
+
+            if (panelToRemove == null)
+            {
+                continue;
+            }
+
+            tab.Panels.Remove(panelToRemove);
+            RemoveRibbonItemDictionaryEntry(tab.Id, panelTitle);
+            RemoveRibbonItemDictionaryEntry(tab.Id, panelToRemove.Source?.Id);
+            return;
+        }
+    }
+
+    private static void RemoveRibbonItemDictionaryEntry(string tabId, string panelName)
+    {
+        if (RevitApi.UiApplication == null || string.IsNullOrEmpty(panelName))
+        {
+            return;
+        }
+
         var uiApplicationType = typeof(UIApplication);
         var ribbonItemsProperty = uiApplicationType.GetProperty("RibbonItemDictionary", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)!;
         var ribbonItems = (Dictionary<string, Dictionary<string, Autodesk.Revit.UI.RibbonPanel>>) ribbonItemsProperty.GetValue(RevitApi.UiApplication);
-        if (ribbonItems.TryGetValue(tab.Id, out var tabItem)) tabItem.Remove(panelName);
+        if (ribbonItems.TryGetValue(tabId, out var tabItem)) tabItem.Remove(panelName);
     }
 
     public static void ReloadShortcuts()

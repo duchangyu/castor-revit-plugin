@@ -2,12 +2,8 @@
   x:Class="CastorPlugin.Views.Pages.DigView"
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:Wpf="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-  xmlns:converters="clr-namespace:CastorPlugin.ViewModels.Converters"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:local="clr-namespace:CastorPlugin.Views.Pages"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:rl="http://revitlookup.com/xaml"
   xmlns:uc="clr-namespace:CastorPlugin.UserControls"
   xmlns:vm="clr-namespace:CastorPlugin.ViewModels.Pages"
   d:DataContext="{d:DesignInstance Type=vm:DigViewModel,
@@ -16,82 +12,13 @@
   d:DesignWidth="800"
   mc:Ignorable="d">
 
-  <Page.Resources>
-    <converters:BoolVisibilityConverter x:Key="BoolVisibilityConverter" />
-    <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
-  </Page.Resources>
-
   <Grid Background="{DynamicResource ApplicationBackgroundBrush}">
-    <DockPanel Margin="12" LastChildFill="True">
-      <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-        <!--  进度条和按钮的容器  -->
-        <Grid Margin="0,0,0,10">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-
-          <!--  进度条部分  -->
-          <StackPanel Grid.Column="0" Orientation="Horizontal">
-            <TextBlock VerticalAlignment="Center" Text="名花有主：" />
-            <ProgressBar
-              Width="200"
-              Height="20"
-              Maximum="{Binding TotalCandidates}"
-              Minimum="0"
-              Value="{Binding CompletedCandidates}" />
-            <TextBlock
-              Margin="10,0,0,0"
-              VerticalAlignment="Center"
-              Text="{Binding CompletedCandidates, StringFormat={}{0:N0}}" />
-            <TextBlock
-              Margin="5,0,0,0"
-              VerticalAlignment="Center"
-              Text="/" />
-            <TextBlock
-              Margin="5,0,0,0"
-              VerticalAlignment="Center"
-              Text="{Binding TotalCandidates, StringFormat={}{0:N0}}" />
-          </StackPanel>
-
-          <!--  按钮部分  -->
-          <StackPanel
-            Grid.Column="1"
-            HorizontalAlignment="Right"
-            Orientation="Horizontal">
-            <Button
-              x:Name="startBtn"
-              Margin="0,0,10,0"
-              Command="{Binding DigCommand}"
-              Content="开始挖宝" />
-            <Button
-              x:Name="cancelBtn"
-              Command="{Binding CancelDigCommand}"
-              Content="取消"
-              IsEnabled="{Binding IsLoading}" />
-          </StackPanel>
-        </Grid>
-      </StackPanel>
-
-      <Grid>
-        <uc:WebView2Control
-          x:Name="webView"
-          HorizontalAlignment="Stretch"
-          VerticalAlignment="Stretch"
-          Source="{Binding WebViewUrl, Mode=TwoWay}"
-          Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
-          WebMessageReceived="WebView_WebMessageReceived" />
-
-        <!--  LoadingIndicator overlay  -->
-        <Grid Background="#80000000" Visibility="{Binding IsLoading, Converter={StaticResource BoolVisibilityConverter}}">
-          <ContentControl
-            HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
-            Content="{Binding LoadingIndicator}" />
-        </Grid>
-      </Grid>
-    </DockPanel>
-
-
+    <uc:WebView2Control
+      x:Name="webView"
+      Margin="12"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch"
+      Source="{Binding WebViewUrl, Mode=TwoWay}"
+      WebMessageReceived="WebView_WebMessageReceived" />
   </Grid>
 </Page>

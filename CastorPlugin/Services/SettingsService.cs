@@ -47,7 +47,7 @@ namespace CastorPlugin.Services
     public sealed class SettingsService : ISettingsService, INotifyPropertyChanged // Implement INotifyPropertyChanged
     {
         private const int DefaultTransitionDuration = 200;
-        private const string DefaultAssetPlazaUrl = "https://www.bimonchain.com/castor/";
+        private const string DefaultAssetPlazaUrl = "http://localhost:5173/";
         private readonly Settings _settings;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SettingsService> _logger;
