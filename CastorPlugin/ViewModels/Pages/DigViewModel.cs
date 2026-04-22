@@ -186,6 +186,11 @@ namespace CastorPlugin.ViewModels.Pages
 
         private bool IsAllowedOrigin(string uri)
         {
+            if (string.IsNullOrWhiteSpace(uri))
+            {
+                return false;
+            }
+
             string[] allowedOrigins = { "https://trusted-domain.com" };
             return Array.Exists(allowedOrigins, origin => uri.StartsWith(origin, StringComparison.OrdinalIgnoreCase));
         }

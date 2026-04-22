@@ -11,7 +11,6 @@
   <Grid>
     <Wpf:WebView2
       x:Name="InnerWebView"
-      Source="{Binding Source, RelativeSource={RelativeSource AncestorType=UserControl}}"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch" />
       

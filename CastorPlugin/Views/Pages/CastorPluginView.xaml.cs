@@ -74,8 +74,7 @@ namespace CastorPlugin.Views
                     webView.CoreWebView2.NewWindowRequested -= CoreWebView2_NewWindowRequested;
                     webView.NavigationCompleted -= WebView_NavigationCompleted;
                     
-                    // 移除其他事件处理程序
-                    webView.Source = null;
+                    webView.CoreWebView2.Navigate("about:blank");
                 }
 
                 _isWebViewInitialized = false;
@@ -91,6 +90,11 @@ namespace CastorPlugin.Views
         {
             // 阻止新窗口打开，在当前窗口中导航
             e.Handled = true;
+            if (webView?.CoreWebView2 == null || string.IsNullOrWhiteSpace(e.Uri))
+            {
+                return;
+            }
+
             webView.CoreWebView2.Navigate(e.Uri);
         }
 

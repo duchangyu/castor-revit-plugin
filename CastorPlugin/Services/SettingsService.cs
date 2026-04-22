@@ -47,6 +47,7 @@ namespace CastorPlugin.Services
     public sealed class SettingsService : ISettingsService, INotifyPropertyChanged // Implement INotifyPropertyChanged
     {
         private const int DefaultTransitionDuration = 200;
+        private const string DefaultAssetPlazaUrl = "https://www.bimonchain.com/castor/";
         private readonly Settings _settings;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SettingsService> _logger;
@@ -210,7 +211,10 @@ namespace CastorPlugin.Services
 
         public string GetLandingPageUrl()
         {
-            return _configuration["LandingPageUrl"];
+            var landingPageUrl = _configuration["LandingPageUrl"];
+            return string.IsNullOrWhiteSpace(landingPageUrl)
+                ? DefaultAssetPlazaUrl
+                : landingPageUrl;
         }
 
         public string GetAssetPlazaUrl()

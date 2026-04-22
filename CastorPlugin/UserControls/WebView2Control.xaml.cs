@@ -26,7 +26,7 @@ namespace CastorPlugin.UserControls
         /// </summary>
         public static readonly DependencyProperty SourceProperty =
             DependencyProperty.Register("Source", typeof(string), typeof(WebView2Control), 
-                new PropertyMetadata("about:blank", OnSourceChanged));
+                new PropertyMetadata(BlankUrl, OnSourceChanged, CoerceSourceValue));
 
         /// <summary>
         /// AllowedOrigins 依赖属性，用于设置允许的源域名列表
@@ -47,8 +47,8 @@ namespace CastorPlugin.UserControls
         /// </summary>
         public string Source
         {
-            get { return (string)GetValue(SourceProperty); }
-            set { SetValue(SourceProperty, value ?? "about:blank"); }
+            get { return NormalizeSource((string)GetValue(SourceProperty)); }
+            set { SetValue(SourceProperty, NormalizeSource(value)); }
         }
 
         /// <summary>
@@ -76,10 +76,12 @@ namespace CastorPlugin.UserControls
 
         private bool _isInitialized;
         private bool _isDisposed;
+        private bool _isNavigatingFromWebView;
         private readonly SemaphoreSlim _initializationLock = new SemaphoreSlim(1, 1);
 
         // 定义页面加载完成后的渲染延迟时间（毫秒）
         private const int RenderDelayMs = 500;
+        private const string BlankUrl = "about:blank";
         private CancellationTokenSource _fadeTokenSource;
 
         public WebView2Control()
@@ -199,15 +201,7 @@ namespace CastorPlugin.UserControls
                         InnerWebView.WebMessageReceived += InnerWebView_WebMessageReceived;
                         InnerWebView.NavigationCompleted += InnerWebView_NavigationCompleted;
 
-                        // 如果设置了初始 URL，则导航到该 URL
-                        if (!string.IsNullOrEmpty(Source))
-                        {
-                            InnerWebView.CoreWebView2.Navigate(Source);
-                        }
-                        else
-                        {
-                            IsLoading = false;
-                        }
+                        InnerWebView.CoreWebView2.Navigate(Source);
 
                         _isInitialized = true;
                         Log.Information("WebView2 initialized successfully");
@@ -273,7 +267,18 @@ namespace CastorPlugin.UserControls
                     IsLoading = false;
                     return;
                 }
-                Source = e.Uri;
+                if (!string.IsNullOrWhiteSpace(e.Uri))
+                {
+                    _isNavigatingFromWebView = true;
+                    try
+                    {
+                        Source = e.Uri;
+                    }
+                    finally
+                    {
+                        _isNavigatingFromWebView = false;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -308,12 +313,31 @@ namespace CastorPlugin.UserControls
         /// </summary>
         private bool IsAllowedOrigin(string uri)
         {
-            if (AllowedOrigins == null || !AllowedOrigins.Any())
+            if (string.IsNullOrWhiteSpace(uri))
+            {
+                return false;
+            }
+
+            var allowedOrigins = AllowedOrigins?
+                .Where(origin => !string.IsNullOrWhiteSpace(origin))
+                .ToArray();
+
+            if (allowedOrigins == null || allowedOrigins.Length == 0)
             {
                 return true; // 如果未设置 AllowedOrigins，则允许所有源
             }
 
-            return AllowedOrigins.Any(origin => uri.StartsWith(origin, StringComparison.OrdinalIgnoreCase));
+            return allowedOrigins.Any(origin => uri.StartsWith(origin, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static object CoerceSourceValue(DependencyObject d, object baseValue)
+        {
+            return NormalizeSource(baseValue as string);
+        }
+
+        private static string NormalizeSource(string source)
+        {
+            return string.IsNullOrWhiteSpace(source) ? BlankUrl : source.Trim();
         }
 
         /// <summary>
@@ -334,8 +358,12 @@ namespace CastorPlugin.UserControls
             {
                 if (InnerWebView?.CoreWebView2 != null && !_isDisposed)
                 {
-                    string url = string.IsNullOrEmpty(Source) ? "about:blank" : Source;
-                    InnerWebView.CoreWebView2.Navigate(url);
+                    if (_isNavigatingFromWebView)
+                    {
+                        return;
+                    }
+
+                    InnerWebView.CoreWebView2.Navigate(Source);
                 }
             }
             catch (Exception ex)
