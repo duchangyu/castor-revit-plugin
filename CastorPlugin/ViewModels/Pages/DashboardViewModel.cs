@@ -29,7 +29,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Threading;
-using System.Windows;
+using System.Windows.Threading;
 using Wpf.Ui;
 
 namespace CastorPlugin.ViewModels.Pages;
@@ -40,6 +40,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
     private readonly IDigService _digService;
     private readonly INavigationService _navigationService;
     private readonly NotificationService _notificationService;
+    private readonly Dispatcher _dispatcher;
     private CancellationTokenSource _digCancellationTokenSource;
 
     public DashboardViewModel(
@@ -52,6 +53,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
         _digService = digService;
         _navigationService = navigationService;
         _notificationService = notificationService;
+        _dispatcher = Dispatcher.CurrentDispatcher;
 
         // Listen to auth state changes
         _authService.OnAuthStateChanged += OnAuthStateChanged;
@@ -71,9 +73,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
 
     private void OnAuthStateChanged()
     {
-        OnPropertyChanged(nameof(IsLoggedIn));
-        OnPropertyChanged(nameof(UserPhone));
-        AuthStateChanged?.Invoke();
+        RunOnUiThread(() =>
+        {
+            OnPropertyChanged(nameof(IsLoggedIn));
+            OnPropertyChanged(nameof(UserPhone));
+            AuthStateChanged?.Invoke();
+        });
     }
 
     // ========== Dig State ==========
@@ -110,7 +115,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
 
     private void OnDigProgressChanged(int scanned, int total, string familyName)
     {
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        RunOnUiThread(() =>
         {
             ScannedFamilies = scanned;
             TotalFamilies = total;
@@ -121,7 +126,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
 
     private void OnDigCompleted(int total, int newReg, int similar)
     {
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        RunOnUiThread(() =>
         {
             IsDigging = false;
             TotalScanned = total;
@@ -130,6 +135,22 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             HasResult = true;
             ResultMessage = $"扫描了 {total} 个族\n新增登记 {newReg} 个\n相似跳过 {similar} 个";
         });
+    }
+
+    private void RunOnUiThread(Action action)
+    {
+        if (_dispatcher.HasShutdownStarted || _dispatcher.HasShutdownFinished)
+        {
+            return;
+        }
+
+        if (_dispatcher.CheckAccess())
+        {
+            action();
+            return;
+        }
+
+        _dispatcher.InvokeAsync(action);
     }
 
     // ========== Commands ==========
