@@ -33,5 +33,6 @@ namespace CastorPlugin.Services.Contracts
         void ClearAuth();
 
         string GetLandingPageUrl();
+        string GetAssetPlazaUrl();
     }
 }

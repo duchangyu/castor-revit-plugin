@@ -209,7 +209,15 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             ResultMessage = result.Failed > 0
                 ? $"扫描了 {result.TotalChecked} 个族\n新增登记 {result.Posted} 个\n相似跳过 {result.Skipped} 个\n失败 {result.Failed} 个"
                 : $"扫描了 {result.TotalChecked} 个族\n新增登记 {result.Posted} 个\n相似跳过 {result.Skipped} 个";
-            _notificationService.ShowSuccess("挖宝完成", ResultMessage);
+
+            if (result.Posted > 0)
+            {
+                OpenAssetPlazaAfterUpload();
+            }
+            else
+            {
+                _notificationService.ShowSuccess("挖宝完成", ResultMessage);
+            }
         }
         catch (OperationCanceledException)
         {
@@ -232,6 +240,12 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
             _digCancellationTokenSource?.Dispose();
             _digCancellationTokenSource = null;
         }
+    }
+
+    private void OpenAssetPlazaAfterUpload()
+    {
+        _navigationService.Navigate(typeof(DigView));
+        _notificationService.ShowSuccess("上传完成", "构件信息已上传完成，已为您切换到浏览器资产广场。");
     }
 
     [RelayCommand]

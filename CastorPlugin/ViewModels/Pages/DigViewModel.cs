@@ -50,12 +50,13 @@ namespace CastorPlugin.ViewModels.Pages
             _digService = digService;
             _castorService = castorService;
             LoadingIndicator = new LoadingIndicator();
-            _webViewUrl = _settingsService.GetLandingPageUrl(); // Set initial URL from settings
+            _webViewUrl = _settingsService.GetAssetPlazaUrl(); // Set initial URL from settings
         }
 
         public void OnNavigatedTo()
         {
            Log.Information($"Navigated to {GetType().FullName}");
+           OpenAssetPlaza();
         }
 
         public void OnNavigatedFrom()
@@ -73,11 +74,10 @@ namespace CastorPlugin.ViewModels.Pages
             try
             {
                 _digService.CandidatePosted += OnCandidatePosted;
-                var documentId = await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
+                await RevitTask.RunAsync(() => _digService.Dig(_cancellationTokenSource.Token));
 
-               
-                // Update WebView2 URL after successful dig
-                UpdateCandidateListUrl(documentId);
+                // Switch the embedded browser to the public asset plaza after upload.
+                OpenAssetPlaza();
 
                 //update total candidates
                 await RevitTask.RunAsync(() => _digService.FetchCandidateCountAsync());
@@ -190,6 +190,26 @@ namespace CastorPlugin.ViewModels.Pages
             return Array.Exists(allowedOrigins, origin => uri.StartsWith(origin, StringComparison.OrdinalIgnoreCase));
         }
 
+        public void OpenAssetPlaza()
+        {
+            var newUrl = _settingsService.GetAssetPlazaUrl();
+            if (string.IsNullOrWhiteSpace(newUrl))
+            {
+                Log.Warning("Asset plaza URL is not configured");
+                return;
+            }
+
+            if (WebViewUrl != newUrl)
+            {
+                WebViewUrl = newUrl;
+                Log.Information($"WebView URL updated to asset plaza: {newUrl}");
+            }
+            else
+            {
+                _ = UpdateWebViewUrlAsync(newUrl);
+            }
+        }
+
         public void UpdateCandidateListUrl(string documentId)
         {
             if (string.IsNullOrEmpty(documentId))
@@ -198,12 +218,7 @@ namespace CastorPlugin.ViewModels.Pages
                 return;
             }
 
-            var newUrl = $"http://macbook-pro:9527/#/candidates?sourceDocumentId={documentId}";
-            if (WebViewUrl != newUrl)
-            {
-                WebViewUrl = newUrl;
-                Log.Information($"WebView URL updated to: {newUrl}");
-            }
+            OpenAssetPlaza();
         }
 
         partial void OnWebViewUrlChanged(string value)

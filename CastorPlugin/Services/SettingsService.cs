@@ -213,5 +213,13 @@ namespace CastorPlugin.Services
             return _configuration["LandingPageUrl"];
         }
 
+        public string GetAssetPlazaUrl()
+        {
+            var assetPlazaUrl = _configuration["AssetPlazaUrl"];
+            return string.IsNullOrWhiteSpace(assetPlazaUrl)
+                ? GetLandingPageUrl()
+                : assetPlazaUrl;
+        }
+
     }
 }
