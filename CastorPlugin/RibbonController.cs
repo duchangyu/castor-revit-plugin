@@ -4,6 +4,7 @@ using CastorPlugin.Commands;
 using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
 using CastorPlugin.Utils;
+using Serilog;
 
 namespace CastorPlugin
 {
@@ -55,16 +56,40 @@ namespace CastorPlugin
 
         public static void ReloadPanels(ISettingsService settingsService)
         {
+            if (Application.ActionEventHandler is null)
+            {
+                Log.Warning("ActionEventHandler 未初始化，尝试在当前上下文直接刷新 Ribbon");
+                TryReloadPanelsCore(settingsService);
+                return;
+            }
+
             Application.ActionEventHandler.Raise(_ =>
             {
-                RibbonUtils.RemovePanel("CustomCtrl_%CustomCtrl_%Add-Ins%CastorPlugin%CastorButton", PanelName);
-                //RibbonUtils.RemovePanel("CustomCtrl_%CastorPlugin%RevitLookup.Commands.SnoopSelectionCommand", PanelName);
-
-                var controlledApplication = RevitApi.CreateUiControlledApplication();
-                CreatePanel(controlledApplication, settingsService);
-
-                RibbonUtils.ReloadShortcuts();
+                TryReloadPanelsCore(settingsService);
             });
+        }
+
+        private static void TryReloadPanelsCore(ISettingsService settingsService)
+        {
+            try
+            {
+                ReloadPanelsCore(settingsService);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Ribbon 热刷新失败，已忽略: {ex.Message}");
+            }
+        }
+
+        private static void ReloadPanelsCore(ISettingsService settingsService)
+        {
+            RibbonUtils.RemovePanel("CustomCtrl_%CustomCtrl_%Add-Ins%CastorPlugin%CastorButton", PanelName);
+            //RibbonUtils.RemovePanel("CustomCtrl_%CastorPlugin%RevitLookup.Commands.SnoopSelectionCommand", PanelName);
+
+            var controlledApplication = RevitApi.CreateUiControlledApplication();
+            CreatePanel(controlledApplication, settingsService);
+
+            RibbonUtils.ReloadShortcuts();
         }
     }
 }

@@ -3,9 +3,9 @@ using Autodesk.Revit.Attributes;
 using CastorPlugin.Core;
 using CastorPlugin.Services.Contracts;
 using CastorPlugin.ViewModels.Pages;
+using CastorPlugin.Views.Pages;
 using Nice3point.Revit.Toolkit.External;
 using Revit.Async;
-using Wpf.Ui.Controls;
 
 namespace CastorPlugin.Commands
 {
@@ -28,6 +28,7 @@ namespace CastorPlugin.Commands
             if (settingsService.IsLoggedIn)
             {
                 RibbonController.ReloadPanels(settingsService);
+                Host.GetService<ICastorService>().Show<DashboardView>();
             }
         }
     }
