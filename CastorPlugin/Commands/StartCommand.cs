@@ -23,7 +23,7 @@ public class StartCommand : ExternalCommand
 
         RevitTask.Initialize(RevitApi.UiApplication);
 
-        Host.GetService<ICastorService>().Show<DigView>();
+        Host.GetService<ICastorService>().Show<DashboardView>();
 
 
 

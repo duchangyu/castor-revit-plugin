@@ -7,7 +7,6 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:pages="clr-namespace:CastorPlugin.Views.Pages"
   xmlns:rl="http://revitlookup.com/xaml"
-  Title="SettingsView"
   d:DataContext="{d:DesignInstance pages:SettingsView}"
   d:DesignHeight="450"
   d:DesignWidth="800"

@@ -42,28 +42,27 @@
     <rl:NavigationView
       x:Name="RootNavigation"
       Grid.ColumnSpan="2"
-      BreadcrumbBar="{Binding ElementName=BreadcrumbBar}"
       IsBackButtonVisible="Collapsed"
       OpenPaneLength="159"
       PaneDisplayMode="Left"
       TitleBar="{Binding ElementName=TitleBar, Mode=OneWay}">
       <rl:NavigationView.MenuItems>
         <rl:NavigationViewItem
-          Content="Dashboard"
+          Content="挖宝大厅"
           Icon="{rl:SymbolIcon AppGeneric24}"
           TargetPageType="{x:Type pages:DashboardView}" />
         <rl:NavigationViewItem
-          Content="DigView"
+          Content="资产广场"
           Icon="{rl:SymbolIcon AppGeneric24}"
           TargetPageType="{x:Type pages:DigView}" />
       </rl:NavigationView.MenuItems>
       <rl:NavigationView.FooterMenuItems>
         <rl:NavigationViewItem
-          Content="Settings"
+          Content="设置"
           Icon="{rl:SymbolIcon Settings24}"
           TargetPageType="{x:Type pages:SettingsView}" />
         <rl:NavigationViewItem
-          Content="About"
+          Content="关于"
           Icon="{rl:SymbolIcon Info24}"
           TargetPageType="{x:Type pages:AboutView}">
           <rl:NavigationViewItem.InfoBadge>
@@ -76,9 +75,6 @@
           </rl:NavigationViewItem.InfoBadge>
         </rl:NavigationViewItem>
       </rl:NavigationView.FooterMenuItems>
-      <rl:NavigationView.Header>
-        <rl:BreadcrumbBar x:Name="BreadcrumbBar" Margin="12,12,0,0" />
-      </rl:NavigationView.Header>
       <rl:NavigationView.ContentOverlay>
         <rl:SnackbarPresenter x:Name="RootSnackbar" Panel.ZIndex="99" />
       </rl:NavigationView.ContentOverlay>

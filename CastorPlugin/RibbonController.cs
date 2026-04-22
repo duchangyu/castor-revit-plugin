@@ -20,8 +20,8 @@ namespace CastorPlugin
             pullButton.SetLargeImage("/CastorPlugin;component/Resources/Images/RibbonIcon32.png");
 
            
-            pullButton.AddPushButton<StartCommand>("开始");
-            pullButton.AddPushButton<DashboardCommand>("Dashboard");
+            pullButton.AddPushButton<StartCommand>("开始挖宝");
+            pullButton.AddPushButton<DashboardCommand>("挖宝大厅");
 
             // Dynamic login/logout button based on auth state
             if (settingsService.IsLoggedIn && settingsService.CurrentUser != null)
@@ -39,7 +39,7 @@ namespace CastorPlugin
             //showButton.SetImage("/CastorPlugin;component/Resources/Icons/RibbonIcon16.png");
             //showButton.SetLargeImage("/CastorPlugin;component/Resources/Icons/RibbonIcon32.png");
 
-            //pullButton.AddPushButton<DashboardCommand>("Dashboard");
+            //pullButton.AddPushButton<DashboardCommand>("挖宝大厅");
             //ResolveSelectionButton(settingsService, pullButton);
 
             //pullButton.AddPushButton<EventMonitorCommand>("Event monitor");

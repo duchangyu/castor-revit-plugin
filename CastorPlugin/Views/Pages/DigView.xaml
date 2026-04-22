@@ -10,7 +10,6 @@
   xmlns:rl="http://revitlookup.com/xaml"
   xmlns:uc="clr-namespace:CastorPlugin.UserControls"
   xmlns:vm="clr-namespace:CastorPlugin.ViewModels.Pages"
-  Title="DigView"
   d:DataContext="{d:DesignInstance Type=vm:DigViewModel,
                                    IsDesignTimeCreatable=False}"
   d:DesignHeight="450"
@@ -25,8 +24,6 @@
   <Grid Background="{DynamicResource ApplicationBackgroundBrush}">
     <DockPanel Margin="12" LastChildFill="True">
       <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-        <TextBlock Margin="0,0,0,10" Text="市面上的BIM构件去除重复因素，约10万个，尽快登记抢占，手快有，手慢无..." />
-
         <!--  进度条和按钮的容器  -->
         <Grid Margin="0,0,0,10">
           <Grid.ColumnDefinitions>
