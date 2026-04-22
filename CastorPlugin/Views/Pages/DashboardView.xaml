@@ -172,6 +172,351 @@
         </Grid>
       </Border>
 
+      <!-- 挖宝控制台 -->
+      <Border Style="{StaticResource CardStyle}" Padding="0" ClipToBounds="True">
+        <Border.Triggers>
+          <EventTrigger RoutedEvent="Border.Loaded">
+            <BeginStoryboard>
+              <Storyboard RepeatBehavior="Forever">
+                <DoubleAnimation
+                  Storyboard.TargetName="ScannerRingRotate"
+                  Storyboard.TargetProperty="Angle"
+                  From="0"
+                  To="360"
+                  Duration="0:0:5"/>
+                <DoubleAnimation
+                  Storyboard.TargetName="ScanSweepRotate"
+                  Storyboard.TargetProperty="Angle"
+                  From="0"
+                  To="360"
+                  Duration="0:0:2.6"/>
+                <DoubleAnimation
+                  Storyboard.TargetName="OrbitRotate"
+                  Storyboard.TargetProperty="Angle"
+                  From="360"
+                  To="0"
+                  Duration="0:0:7"/>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  Storyboard.TargetName="CrystalPulseScale"
+                  Storyboard.TargetProperty="ScaleX"
+                  From="0.96"
+                  To="1.05"
+                  Duration="0:0:1.25">
+                  <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                  </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  Storyboard.TargetName="CrystalPulseScale"
+                  Storyboard.TargetProperty="ScaleY"
+                  From="0.96"
+                  To="1.05"
+                  Duration="0:0:1.25">
+                  <DoubleAnimation.EasingFunction>
+                    <SineEase EasingMode="EaseInOut"/>
+                  </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  Storyboard.TargetName="CrystalGlow"
+                  Storyboard.TargetProperty="Opacity"
+                  From="0.35"
+                  To="0.85"
+                  Duration="0:0:1.1"/>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  Storyboard.TargetName="ScanLineTranslate"
+                  Storyboard.TargetProperty="X"
+                  From="-54"
+                  To="54"
+                  Duration="0:0:1.35">
+                  <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseInOut"/>
+                  </DoubleAnimation.EasingFunction>
+                </DoubleAnimation>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  Storyboard.TargetName="DataDotOne"
+                  Storyboard.TargetProperty="Opacity"
+                  From="0.25"
+                  To="1"
+                  Duration="0:0:0.65"/>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  BeginTime="0:0:0.2"
+                  Storyboard.TargetName="DataDotTwo"
+                  Storyboard.TargetProperty="Opacity"
+                  From="0.2"
+                  To="0.95"
+                  Duration="0:0:0.7"/>
+                <DoubleAnimation
+                  AutoReverse="True"
+                  BeginTime="0:0:0.38"
+                  Storyboard.TargetName="DataDotThree"
+                  Storyboard.TargetProperty="Opacity"
+                  From="0.25"
+                  To="0.9"
+                  Duration="0:0:0.75"/>
+              </Storyboard>
+            </BeginStoryboard>
+          </EventTrigger>
+        </Border.Triggers>
+
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
+            <ColumnDefinition Width="*"/>
+          </Grid.ColumnDefinitions>
+
+          <Border Grid.Column="0"
+                  MinHeight="214"
+                  Padding="16"
+                  CornerRadius="12,0,0,12">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#111827" Offset="0"/>
+                <GradientStop Color="#1E1B4B" Offset="0.52"/>
+                <GradientStop Color="#0F766E" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+
+            <Canvas Width="248" Height="188" HorizontalAlignment="Center" VerticalAlignment="Center">
+              <Ellipse
+                Width="190"
+                Height="190"
+                Canvas.Left="29"
+                Canvas.Top="-1"
+                Stroke="#2238BDF8"
+                StrokeThickness="26"/>
+              <Ellipse
+                Width="158"
+                Height="158"
+                Canvas.Left="45"
+                Canvas.Top="15"
+                Stroke="#55A7F3D0"
+                StrokeThickness="1.4"
+                StrokeDashArray="8 8"
+                RenderTransformOrigin="0.5,0.5">
+                <Ellipse.RenderTransform>
+                  <RotateTransform x:Name="ScannerRingRotate"/>
+                </Ellipse.RenderTransform>
+              </Ellipse>
+              <Ellipse
+                Width="104"
+                Height="104"
+                Canvas.Left="72"
+                Canvas.Top="42"
+                Stroke="#334F46E5"
+                StrokeThickness="1"/>
+
+              <Path
+                Data="M124,94 L124,11 A83,83 0 0 1 181,34 Z"
+                Fill="#5538BDF8"
+                Opacity="0.72">
+                <Path.RenderTransform>
+                  <RotateTransform x:Name="ScanSweepRotate" CenterX="124" CenterY="94"/>
+                </Path.RenderTransform>
+              </Path>
+
+              <Canvas
+                Width="188"
+                Height="188"
+                Canvas.Left="30"
+                Canvas.Top="0"
+                RenderTransformOrigin="0.5,0.5">
+                <Canvas.RenderTransform>
+                  <RotateTransform x:Name="OrbitRotate"/>
+                </Canvas.RenderTransform>
+                <Ellipse x:Name="DataDotOne" Width="9" Height="9" Canvas.Left="89" Canvas.Top="2" Fill="#FDE68A"/>
+                <Ellipse x:Name="DataDotTwo" Width="7" Height="7" Canvas.Left="173" Canvas.Top="91" Fill="#A7F3D0" Opacity="0.45"/>
+                <Ellipse x:Name="DataDotThree" Width="6" Height="6" Canvas.Left="18" Canvas.Top="139" Fill="#93C5FD" Opacity="0.5"/>
+              </Canvas>
+
+              <Ellipse
+                x:Name="CrystalGlow"
+                Width="96"
+                Height="96"
+                Canvas.Left="76"
+                Canvas.Top="46"
+                Fill="#6638BDF8"
+                Opacity="0.45"/>
+
+              <Canvas
+                Width="86"
+                Height="82"
+                Canvas.Left="81"
+                Canvas.Top="53"
+                RenderTransformOrigin="0.5,0.55">
+                <Canvas.RenderTransform>
+                  <ScaleTransform x:Name="CrystalPulseScale" ScaleX="1" ScaleY="1"/>
+                </Canvas.RenderTransform>
+                <Polygon Points="43,2 74,25 62,70 24,70 12,25"
+                         Stroke="#E0F2FE"
+                         StrokeThickness="1.4">
+                  <Polygon.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                      <GradientStop Color="#ECFEFF" Offset="0"/>
+                      <GradientStop Color="#38BDF8" Offset="0.48"/>
+                      <GradientStop Color="#4F46E5" Offset="1"/>
+                    </LinearGradientBrush>
+                  </Polygon.Fill>
+                </Polygon>
+                <Polygon Points="43,2 52,25 43,70 24,70 12,25"
+                         Fill="#BAE6FD"
+                         Opacity="0.72"/>
+                <Polygon Points="52,25 74,25 62,70 43,70"
+                         Fill="#312E81"
+                         Opacity="0.42"/>
+                <Polyline Points="12,25 52,25 74,25"
+                          Stroke="#F0FDFA"
+                          StrokeThickness="1"
+                          Opacity="0.7"/>
+              </Canvas>
+
+              <Rectangle
+                Width="124"
+                Height="2"
+                Canvas.Left="62"
+                Canvas.Top="94"
+                RadiusX="1"
+                RadiusY="1"
+                Fill="#CCF0FDFA">
+                <Rectangle.RenderTransform>
+                  <TranslateTransform x:Name="ScanLineTranslate"/>
+                </Rectangle.RenderTransform>
+              </Rectangle>
+
+              <TextBlock
+                Text="FINGERPRINT"
+                Canvas.Left="71"
+                Canvas.Top="160"
+                FontSize="11"
+                FontWeight="SemiBold"
+                Foreground="#A7F3D0"
+                Opacity="0.82"/>
+            </Canvas>
+          </Border>
+
+          <StackPanel Grid.Column="1" Margin="22,20,22,18" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+              <Border
+                Background="#2238BDF8"
+                CornerRadius="12"
+                Padding="9,4"
+                Margin="0,0,8,0"
+                Visibility="{Binding IsDigging, Converter={StaticResource BoolToVisConverter}}">
+                <TextBlock Text="扫描中" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}"/>
+              </Border>
+              <Border
+                Background="#2210B981"
+                CornerRadius="12"
+                Padding="9,4"
+                Margin="0,0,8,0"
+                Visibility="{Binding IsDigging, Converter={StaticResource InverseBoolToVisConverter}}">
+                <TextBlock Text="待命" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource SuccessBrush}"/>
+              </Border>
+              <TextBlock
+                Text="结构化指纹登记"
+                FontSize="12"
+                FontWeight="SemiBold"
+                Foreground="{StaticResource TextSecondaryBrush}"
+                VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock
+              Text="构件指纹扫描"
+              FontSize="22"
+              FontWeight="Bold"
+              Foreground="{StaticResource TextPrimaryBrush}"
+              Margin="0,0,0,6"/>
+            <TextBlock
+              Text="从当前 Revit 项目读取类别、关键参数、尺寸几何和材质用途，生成可比对的结构化指纹；不会上传 .rfa、.rvt 或其他源模型文件。"
+              FontSize="13"
+              LineHeight="20"
+              Foreground="{StaticResource TextSecondaryBrush}"
+              TextWrapping="Wrap"
+              Margin="0,0,0,14"/>
+
+            <StackPanel Visibility="{Binding IsDigging, Converter={StaticResource BoolToVisConverter}}">
+              <ProgressBar Value="{Binding Progress}"
+                           Maximum="100"
+                           Height="8"
+                           Foreground="{StaticResource PrimaryBrush}"
+                           Background="{DynamicResource ControlFillColorDefaultBrush}"
+                           Margin="0,0,0,10"/>
+
+              <TextBlock
+                Text="{Binding CurrentFamilyName}"
+                FontSize="13"
+                FontWeight="SemiBold"
+                Foreground="{StaticResource TextPrimaryBrush}"
+                TextTrimming="CharacterEllipsis"
+                Margin="0,0,0,4"/>
+
+              <TextBlock FontSize="13" Foreground="{StaticResource TextSecondaryBrush}">
+                <Run Text="已处理 "/>
+                <Run Text="{Binding ScannedFamilies}"/>
+                <Run Text=" / "/>
+                <Run Text="{Binding TotalFamilies}"/>
+                <Run Text=" 个族"/>
+              </TextBlock>
+            </StackPanel>
+
+            <WrapPanel Visibility="{Binding IsDigging, Converter={StaticResource InverseBoolToVisConverter}}">
+              <Border Background="#2238BDF8" CornerRadius="12" Padding="9,5" Margin="0,0,8,8">
+                <TextBlock Text="类别" FontSize="12" Foreground="{StaticResource PrimaryBrush}"/>
+              </Border>
+              <Border Background="#2210B981" CornerRadius="12" Padding="9,5" Margin="0,0,8,8">
+                <TextBlock Text="关键参数" FontSize="12" Foreground="{StaticResource SuccessBrush}"/>
+              </Border>
+              <Border Background="#22F59E0B" CornerRadius="12" Padding="9,5" Margin="0,0,8,8">
+                <TextBlock Text="尺寸几何" FontSize="12" Foreground="{StaticResource WarningBrush}"/>
+              </Border>
+              <Border Background="#2238BDF8" CornerRadius="12" Padding="9,5" Margin="0,0,8,8">
+                <TextBlock Text="材质用途" FontSize="12" Foreground="{StaticResource PrimaryBrush}"/>
+              </Border>
+            </WrapPanel>
+
+            <Grid Margin="0,14,0,0">
+              <Button Command="{Binding StartDigCommand}"
+                      IsEnabled="{Binding IsLoggedIn}"
+                      Style="{StaticResource PrimaryButtonStyle}"
+                      Visibility="{Binding IsDigging, Converter={StaticResource InverseBoolToVisConverter}}"
+                      HorizontalAlignment="Left"
+                      Padding="20,11">
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="18" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                  <TextBlock Text="开始挖宝" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+
+              <Button Command="{Binding CancelDigCommand}"
+                      Visibility="{Binding IsDigging, Converter={StaticResource BoolToVisConverter}}"
+                      HorizontalAlignment="Left"
+                      Padding="16,9"
+                      Background="{DynamicResource ControlFillColorDefaultBrush}"
+                      Foreground="{StaticResource TextPrimaryBrush}"
+                      BorderThickness="0"
+                      Cursor="Hand">
+                <Button.Template>
+                  <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                      <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                  </ControlTemplate>
+                </Button.Template>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="15" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                  <TextBlock Text="取消挖宝" VerticalAlignment="Center"/>
+                </StackPanel>
+              </Button>
+            </Grid>
+          </StackPanel>
+        </Grid>
+      </Border>
+
       <!-- 挖宝说明卡片 -->
       <Border Style="{StaticResource CardStyle}">
         <StackPanel>
@@ -214,233 +559,6 @@
               <TextBlock Text="仅上传指纹和展示缩略图，相似构件自动跳过" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" TextAlignment="Center"/>
             </StackPanel>
           </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- 开始挖宝按钮 -->
-      <Button Content="&#xE82D;  开始挖宝"
-              Command="{Binding StartDigCommand}"
-              IsEnabled="{Binding IsLoggedIn}"
-              Style="{StaticResource PrimaryButtonStyle}"
-              FontSize="16"
-              Height="56"
-              Margin="0,8,0,16">
-        <Button.ContentTemplate>
-          <DataTemplate>
-            <StackPanel Orientation="Horizontal">
-              <TextBlock Text="&#xE82D;" FontFamily="Segoe MDL2 Assets" FontSize="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
-              <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
-            </StackPanel>
-          </DataTemplate>
-        </Button.ContentTemplate>
-      </Button>
-
-      <!-- 挖宝进度（Digging 时显示） -->
-      <Border Style="{StaticResource CardStyle}"
-              Visibility="{Binding IsDigging, Converter={StaticResource BoolToVisConverter}}">
-        <Border.Triggers>
-          <EventTrigger RoutedEvent="Border.Loaded">
-            <BeginStoryboard>
-              <Storyboard RepeatBehavior="Forever">
-                <DoubleAnimation
-                  AutoReverse="True"
-                  Storyboard.TargetName="DashboardShovelRotate"
-                  Storyboard.TargetProperty="Angle"
-                  From="-34"
-                  To="20"
-                  Duration="0:0:0.55">
-                  <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                  </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-                <DoubleAnimation
-                  AutoReverse="True"
-                  Storyboard.TargetName="DashboardShovelTranslate"
-                  Storyboard.TargetProperty="Y"
-                  From="-2"
-                  To="10"
-                  Duration="0:0:0.55">
-                  <DoubleAnimation.EasingFunction>
-                    <SineEase EasingMode="EaseInOut"/>
-                  </DoubleAnimation.EasingFunction>
-                </DoubleAnimation>
-                <DoubleAnimation
-                  AutoReverse="True"
-                  Storyboard.TargetName="DashboardGemScale"
-                  Storyboard.TargetProperty="ScaleX"
-                  From="0.92"
-                  To="1.08"
-                  Duration="0:0:0.7"/>
-                <DoubleAnimation
-                  AutoReverse="True"
-                  Storyboard.TargetName="DashboardGemScale"
-                  Storyboard.TargetProperty="ScaleY"
-                  From="0.92"
-                  To="1.08"
-                  Duration="0:0:0.7"/>
-                <DoubleAnimation
-                  AutoReverse="True"
-                  Storyboard.TargetName="DashboardSparkleOne"
-                  Storyboard.TargetProperty="Opacity"
-                  From="0.25"
-                  To="1"
-                  Duration="0:0:0.45"/>
-                <DoubleAnimation
-                  AutoReverse="True"
-                  BeginTime="0:0:0.2"
-                  Storyboard.TargetName="DashboardSparkleTwo"
-                  Storyboard.TargetProperty="Opacity"
-                  From="0.2"
-                  To="0.95"
-                  Duration="0:0:0.45"/>
-              </Storyboard>
-            </BeginStoryboard>
-          </EventTrigger>
-        </Border.Triggers>
-        <StackPanel>
-          <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-            <TextBlock Text="&#xE895;" Style="{StaticResource IconTextStyle}" Foreground="{StaticResource WarningBrush}"/>
-            <TextBlock Text="挖宝进行中..." FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center"/>
-          </StackPanel>
-
-          <Grid Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="220"/>
-              <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <Border
-              Width="210"
-              Height="122"
-              Background="#1838BDF8"
-              BorderBrush="#5538BDF8"
-              BorderThickness="1"
-              CornerRadius="8">
-              <Canvas Width="210" Height="122" ClipToBounds="True">
-                <Ellipse
-                  Width="150"
-                  Height="30"
-                  Canvas.Left="34"
-                  Canvas.Top="86"
-                  Fill="#663B2F2F"/>
-                <Ellipse
-                  Width="98"
-                  Height="18"
-                  Canvas.Left="58"
-                  Canvas.Top="78"
-                  Fill="#996B4F3F"/>
-
-                <Polygon
-                  Points="105,34 132,58 120,88 90,88 78,58"
-                  Fill="#38BDF8"
-                  Stroke="#0EA5E9"
-                  StrokeThickness="2"
-                  RenderTransformOrigin="0.5,0.65">
-                  <Polygon.RenderTransform>
-                    <ScaleTransform x:Name="DashboardGemScale" ScaleX="1" ScaleY="1"/>
-                  </Polygon.RenderTransform>
-                </Polygon>
-                <Polygon
-                  Points="105,34 118,58 105,88 90,88 78,58"
-                  Fill="#7DD3FC"
-                  Opacity="0.75"/>
-                <Polygon
-                  Points="118,58 132,58 120,88 105,88"
-                  Fill="#0284C7"
-                  Opacity="0.55"/>
-
-                <Ellipse
-                  x:Name="DashboardSparkleOne"
-                  Width="8"
-                  Height="8"
-                  Canvas.Left="142"
-                  Canvas.Top="34"
-                  Fill="#FDE68A"
-                  Opacity="0.6"/>
-                <Ellipse
-                  x:Name="DashboardSparkleTwo"
-                  Width="6"
-                  Height="6"
-                  Canvas.Left="70"
-                  Canvas.Top="42"
-                  Fill="#A7F3D0"
-                  Opacity="0.35"/>
-                <Ellipse
-                  Width="5"
-                  Height="5"
-                  Canvas.Left="154"
-                  Canvas.Top="70"
-                  Fill="#F0FDFA"
-                  Opacity="0.7"/>
-
-                <Image
-                  Width="72"
-                  Height="72"
-                  Canvas.Left="18"
-                  Canvas.Top="18"
-                  RenderOptions.BitmapScalingMode="HighQuality"
-                  RenderTransformOrigin="0.82,0.82"
-                  Source="pack://application:,,,/CastorPlugin;component/Resources/Images/shovel.png">
-                  <Image.RenderTransform>
-                    <TransformGroup>
-                      <RotateTransform x:Name="DashboardShovelRotate" Angle="-34"/>
-                      <TranslateTransform x:Name="DashboardShovelTranslate" Y="0"/>
-                    </TransformGroup>
-                  </Image.RenderTransform>
-                </Image>
-              </Canvas>
-            </Border>
-
-            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0,0,0">
-              <TextBlock
-                Text="正在从当前项目里挖掘可登记的构件指纹"
-                FontSize="14"
-                FontWeight="SemiBold"
-                Foreground="{StaticResource TextPrimaryBrush}"
-                TextWrapping="Wrap"/>
-              <TextBlock
-                Margin="0,6,0,0"
-                Text="小铲子只搬走参数、尺寸、材质用途和缩略图，不搬走族文件。"
-                FontSize="12"
-                Foreground="{StaticResource TextSecondaryBrush}"
-                TextWrapping="Wrap"/>
-            </StackPanel>
-          </Grid>
-
-          <ProgressBar Value="{Binding Progress}"
-                       Maximum="100"
-                       Height="8"
-                       Margin="0,0,0,16"
-                       Foreground="{StaticResource PrimaryBrush}"
-                       Background="{DynamicResource ControlFillColorDefaultBrush}"/>
-
-          <TextBlock Text="{Binding CurrentFamilyName}"
-                     FontSize="13"
-                     Foreground="{StaticResource TextSecondaryBrush}"
-                     Margin="0,0,0,8"/>
-
-          <TextBlock FontSize="13" Foreground="{StaticResource TextSecondaryBrush}">
-            <Run Text="已处理: "/>
-            <Run Text="{Binding ScannedFamilies}"/>
-            <Run Text=" 个族"/>
-          </TextBlock>
-
-          <Button Content="取消挖宝"
-                  Command="{Binding CancelDigCommand}"
-                  Margin="0,16,0,0"
-                  Padding="16,8"
-                  Background="{DynamicResource ControlFillColorDefaultBrush}"
-                  Foreground="{StaticResource TextPrimaryBrush}"
-                  BorderThickness="0"
-                  Cursor="Hand">
-            <Button.Template>
-              <ControlTemplate TargetType="Button">
-                <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-              </ControlTemplate>
-            </Button.Template>
-          </Button>
         </StackPanel>
       </Border>
 
