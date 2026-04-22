@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -77,6 +78,8 @@ namespace CastorPlugin.UserControls
         private bool _isInitialized;
         private bool _isDisposed;
         private bool _isNavigatingFromWebView;
+        private bool _isShowingFallbackPage;
+        private bool _webViewEventsAttached;
         private readonly SemaphoreSlim _initializationLock = new SemaphoreSlim(1, 1);
 
         // 定义页面加载完成后的渲染延迟时间（毫秒）
@@ -155,16 +158,16 @@ namespace CastorPlugin.UserControls
         /// </summary>
         private async Task InitializeWebView2()
         {
-            if (_isInitialized || _isDisposed || InnerWebView == null) return;
+            if ((_isInitialized && _webViewEventsAttached) || _isDisposed || InnerWebView == null) return;
 
             await _initializationLock.WaitAsync();
             try
             {
-                if (_isInitialized || _isDisposed || InnerWebView == null) return;
+                if ((_isInitialized && _webViewEventsAttached) || _isDisposed || InnerWebView == null) return;
 
-                if (InnerWebView.CoreWebView2 == null)
+                try
                 {
-                    try
+                    if (InnerWebView.CoreWebView2 == null)
                     {
                         // 检查 WebView2 运行时是否已安装
                         var version = CoreWebView2Environment.GetAvailableBrowserVersionString();
@@ -176,50 +179,35 @@ namespace CastorPlugin.UserControls
                         // 设置 WebView2 用户数据文件夹
                         string tempPath = Path.Combine(Path.GetTempPath(), "WebView2UserData", Guid.NewGuid().ToString());
                         Directory.CreateDirectory(tempPath);
-                        
+
                         var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
                         await InnerWebView.EnsureCoreWebView2Async(env);
-
-                        // 验证 CoreWebView2 仍然有效
-                        if (InnerWebView.CoreWebView2 == null)
-                        {
-                            Log.Error("CoreWebView2 is null after EnsureCoreWebView2Async");
-                            IsLoading = false;
-                            return;
-                        }
-
-                        // 设置安全选项
-                        InnerWebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
-                        InnerWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
-                        InnerWebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
-                        InnerWebView.CoreWebView2.Settings.IsScriptEnabled = true;
-                        InnerWebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
-
-                        // 设置事件处理程序
-                        InnerWebView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
-                        InnerWebView.NavigationStarting += InnerWebView_NavigationStarting;
-                        InnerWebView.WebMessageReceived += InnerWebView_WebMessageReceived;
-                        InnerWebView.NavigationCompleted += InnerWebView_NavigationCompleted;
-
-                        InnerWebView.CoreWebView2.Navigate(Source);
-
-                        _isInitialized = true;
-                        Log.Information("WebView2 initialized successfully");
                     }
-                    catch (Core.Exceptions.WebView2RuntimeNotFoundException)
+
+                    // 验证 CoreWebView2 仍然有效
+                    if (InnerWebView.CoreWebView2 == null)
                     {
-                        Log.Error("WebView2 运行时未安装。请安装 WebView2 运行时后再试。");
+                        Log.Error("CoreWebView2 is null after EnsureCoreWebView2Async");
                         IsLoading = false;
-                        //TODO： 可以在这里提供下载链接或进一步的指导
+                        return;
                     }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"初始化 WebView2 时发生错误: {ex.Message}");
-                        IsLoading = false;
-                    }
+
+                    ConfigureWebView2Settings();
+                    AttachWebView2Handlers();
+                    NavigateToUrl(Source);
+
+                    _isInitialized = true;
+                    Log.Information("WebView2 initialized successfully");
                 }
-                else
+                catch (Core.Exceptions.WebView2RuntimeNotFoundException)
                 {
+                    Log.Error("WebView2 运行时未安装。请安装 WebView2 运行时后再试。");
+                    IsLoading = false;
+                    //TODO： 可以在这里提供下载链接或进一步的指导
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"初始化 WebView2 时发生错误: {ex.Message}");
                     IsLoading = false;
                 }
             }
@@ -227,6 +215,74 @@ namespace CastorPlugin.UserControls
             {
                 _initializationLock.Release();
             }
+        }
+
+        private void ConfigureWebView2Settings()
+        {
+            if (InnerWebView?.CoreWebView2 == null) return;
+
+            InnerWebView.CoreWebView2.Settings.AreDefaultScriptDialogsEnabled = false;
+            InnerWebView.CoreWebView2.Settings.AreDevToolsEnabled = false;
+            InnerWebView.CoreWebView2.Settings.AreHostObjectsAllowed = false;
+            InnerWebView.CoreWebView2.Settings.IsScriptEnabled = true;
+            InnerWebView.CoreWebView2.Settings.IsWebMessageEnabled = true;
+        }
+
+        private void AttachWebView2Handlers()
+        {
+            if (_webViewEventsAttached || InnerWebView?.CoreWebView2 == null) return;
+
+            InnerWebView.CoreWebView2.NewWindowRequested += CoreWebView2_NewWindowRequested;
+            InnerWebView.NavigationStarting += InnerWebView_NavigationStarting;
+            InnerWebView.WebMessageReceived += InnerWebView_WebMessageReceived;
+            InnerWebView.NavigationCompleted += InnerWebView_NavigationCompleted;
+            _webViewEventsAttached = true;
+        }
+
+        private void DetachWebView2Handlers()
+        {
+            if (!_webViewEventsAttached || InnerWebView == null) return;
+
+            try
+            {
+                if (InnerWebView.CoreWebView2 != null)
+                {
+                    InnerWebView.CoreWebView2.NewWindowRequested -= CoreWebView2_NewWindowRequested;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Error removing NewWindowRequested handler: {ex.Message}");
+            }
+
+            try
+            {
+                InnerWebView.NavigationStarting -= InnerWebView_NavigationStarting;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Error removing NavigationStarting handler: {ex.Message}");
+            }
+
+            try
+            {
+                InnerWebView.WebMessageReceived -= InnerWebView_WebMessageReceived;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Error removing WebMessageReceived handler: {ex.Message}");
+            }
+
+            try
+            {
+                InnerWebView.NavigationCompleted -= InnerWebView_NavigationCompleted;
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"Error removing NavigationCompleted handler: {ex.Message}");
+            }
+
+            _webViewEventsAttached = false;
         }
 
         /// <summary>
@@ -242,7 +298,7 @@ namespace CastorPlugin.UserControls
                 if (IsAllowedOrigin(e.Uri))
                 {
                     IsLoading = true;
-                    InnerWebView.CoreWebView2.Navigate(e.Uri); // 在当前 WebView 中导航
+                    NavigateToUrl(e.Uri); // 在当前 WebView 中导航
                 }
             }
             catch (Exception ex)
@@ -261,13 +317,13 @@ namespace CastorPlugin.UserControls
                 if (_isDisposed) return;
                 
                 IsLoading = true;
-                if (!IsAllowedOrigin(e.Uri))
+                if (!_isShowingFallbackPage && !IsAllowedOrigin(e.Uri))
                 {
                     e.Cancel = true; // 如果不是允许的源，取消导航
                     IsLoading = false;
                     return;
                 }
-                if (!string.IsNullOrWhiteSpace(e.Uri))
+                if (!_isShowingFallbackPage && !string.IsNullOrWhiteSpace(e.Uri))
                 {
                     _isNavigatingFromWebView = true;
                     try
@@ -340,6 +396,118 @@ namespace CastorPlugin.UserControls
             return string.IsNullOrWhiteSpace(source) ? BlankUrl : source.Trim();
         }
 
+        private static bool IsNavigableSource(string source)
+        {
+            if (string.Equals(source, BlankUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!Uri.TryCreate(source, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            return uri.Scheme == Uri.UriSchemeHttp
+                || uri.Scheme == Uri.UriSchemeHttps
+                || uri.Scheme == Uri.UriSchemeFile
+                || string.Equals(uri.Scheme, "about", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void NavigateToUrl(string source)
+        {
+            if (_isDisposed || InnerWebView?.CoreWebView2 == null)
+            {
+                return;
+            }
+
+            var url = NormalizeSource(source);
+            if (!IsNavigableSource(url))
+            {
+                Log.Warning($"Invalid WebView2 URL: {url}");
+                ShowNavigationFallback("URL 格式无效");
+                return;
+            }
+
+            try
+            {
+                _isShowingFallbackPage = false;
+                InnerWebView.CoreWebView2.Navigate(url);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"WebView2 navigation failed before request was sent: {ex.Message}");
+                ShowNavigationFallback(ex.Message);
+            }
+        }
+
+        private void ShowNavigationFallback(string reason)
+        {
+            if (_isDisposed || InnerWebView?.CoreWebView2 == null)
+            {
+                return;
+            }
+
+            try
+            {
+                _isShowingFallbackPage = true;
+                IsLoading = false;
+
+                var attemptedUrl = WebUtility.HtmlEncode(Source);
+                var safeReason = WebUtility.HtmlEncode(reason);
+                var html = $@"<!doctype html>
+<html lang=""zh-CN"">
+<head>
+  <meta charset=""utf-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1"">
+  <style>
+    body {{
+      margin: 0;
+      font-family: ""Microsoft YaHei"", ""Segoe UI"", sans-serif;
+      color: #1f2933;
+      background: #f6f8fa;
+    }}
+    main {{
+      box-sizing: border-box;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 72px 32px;
+    }}
+    h1 {{
+      margin: 0 0 16px;
+      font-size: 24px;
+      font-weight: 600;
+    }}
+    p {{
+      margin: 8px 0;
+      line-height: 1.7;
+      font-size: 14px;
+    }}
+    code {{
+      word-break: break-all;
+      color: #334155;
+    }}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>资产广场暂时无法访问</h1>
+    <p>插件已保留当前操作状态。请稍后重试，或检查网络、服务地址和浏览器运行时。</p>
+    <p>目标地址：<code>{attemptedUrl}</code></p>
+    <p>错误信息：<code>{safeReason}</code></p>
+  </main>
+</body>
+</html>";
+
+                InnerWebView.CoreWebView2.NavigateToString(html);
+            }
+            catch (Exception ex)
+            {
+                _isShowingFallbackPage = false;
+                Log.Error($"Failed to show WebView2 fallback page: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Source 属性变更时的处理方法
         /// </summary>
@@ -363,7 +531,7 @@ namespace CastorPlugin.UserControls
                         return;
                     }
 
-                    InnerWebView.CoreWebView2.Navigate(Source);
+                    NavigateToUrl(Source);
                 }
             }
             catch (Exception ex)
@@ -558,11 +726,19 @@ namespace CastorPlugin.UserControls
                     
                     // 注入CSS以防止空白屏闪烁
                     await InjectAntiFlickerStylesAsync();
+                    _isShowingFallbackPage = false;
                 }
                 else
                 {
                     Log.Warning($"Navigation failed with error: {e.WebErrorStatus}`");
                     IsLoading = false;
+                    if (_isShowingFallbackPage)
+                    {
+                        _isShowingFallbackPage = false;
+                        return;
+                    }
+
+                    ShowNavigationFallback(e.WebErrorStatus.ToString());
                 }
             }
             catch (Exception ex)
@@ -604,6 +780,11 @@ namespace CastorPlugin.UserControls
         /// </summary>
         internal void CleanupWebView2()
         {
+            CleanupWebView2(markDisposed: false);
+        }
+
+        private void CleanupWebView2(bool markDisposed)
+        {
             if (_isDisposed) return;
 
             try
@@ -622,42 +803,7 @@ namespace CastorPlugin.UserControls
                 {
                     if (InnerWebView?.CoreWebView2 != null)
                     {
-                        // 移除事件处理器
-                        try
-                        {
-                            InnerWebView.CoreWebView2.NewWindowRequested -= CoreWebView2_NewWindowRequested;
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning($"Error removing NewWindowRequested handler: {ex.Message}");
-                        }
-                        
-                        try
-                        {
-                            InnerWebView.NavigationStarting -= InnerWebView_NavigationStarting;
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning($"Error removing NavigationStarting handler: {ex.Message}");
-                        }
-                        
-                        try
-                        {
-                            InnerWebView.WebMessageReceived -= InnerWebView_WebMessageReceived;
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning($"Error removing WebMessageReceived handler: {ex.Message}");
-                        }
-                        
-                        try
-                        {
-                            InnerWebView.NavigationCompleted -= InnerWebView_NavigationCompleted;
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Warning($"Error removing NavigationCompleted handler: {ex.Message}");
-                        }
+                        DetachWebView2Handlers();
 
                         // 导航到空白页
                         try
@@ -675,18 +821,9 @@ namespace CastorPlugin.UserControls
                     Log.Warning($"Error accessing CoreWebView2: {ex.Message}");
                 }
 
-                // 重置Source属性
-                try
-                {
-                    Source = "about:blank";
-                }
-                catch (Exception ex)
-                {
-                    Log.Warning($"设置Source属性时发生错误: {ex.Message}");
-                }
-
                 IsLoading = false;
-                _isDisposed = true;
+                _isShowingFallbackPage = false;
+                _isDisposed = markDisposed;
                 _isInitialized = false;
                 
                 Log.Information("WebView2 cleanup completed");
@@ -694,7 +831,7 @@ namespace CastorPlugin.UserControls
             catch (Exception ex)
             {
                 Log.Error($"清理 WebView2 资源时发生错误: {ex.Message}");
-                _isDisposed = true;
+                _isDisposed = markDisposed;
                 _isInitialized = false;
             }
         }
@@ -753,7 +890,7 @@ namespace CastorPlugin.UserControls
                 }
                 
                 // 清理现有资源
-                CleanupWebView2();
+                CleanupWebView2(markDisposed: false);
                 
                 // 重置状态
                 _isInitialized = false;

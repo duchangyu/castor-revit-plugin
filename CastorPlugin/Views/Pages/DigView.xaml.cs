@@ -16,6 +16,8 @@ namespace CastorPlugin.Views.Pages
     /// </summary>
     public partial class DigView : Page
     {
+        private bool _webViewNavigationHandlerAttached;
+
         public DigView(DigViewModel viewModel)
         {
             InitializeComponent();
@@ -43,6 +45,7 @@ namespace CastorPlugin.Views.Pages
             // 确保清理WebView2资源
             if (webView != null)
             {
+                DetachWebViewNavigationHandler();
                 webView.CleanupWebView2();
             }
         }
@@ -56,9 +59,16 @@ namespace CastorPlugin.Views.Pages
                 {
                     // 确保 WebView2 控件已初始化
                     await webView.InitializeAsync();
+
+                    if (webView.WebView?.CoreWebView2 == null)
+                    {
+                        ViewModel.SetWebViewInitialized(false);
+                        Log.Warning("WebView CoreWebView2 is not available after initialization");
+                        return;
+                    }
                     
                     // 注册导航完成事件以确保我们知道何时 WebView 已完全加载
-                    webView.WebView.NavigationCompleted += WebView_NavigationCompleted;
+                    AttachWebViewNavigationHandler();
                     
                     // 通知 ViewModel WebView 已初始化
                     ViewModel.SetWebViewInitialized(true);
@@ -78,12 +88,34 @@ namespace CastorPlugin.Views.Pages
             }
         }
 
+        private void AttachWebViewNavigationHandler()
+        {
+            if (_webViewNavigationHandlerAttached || webView?.WebView == null)
+            {
+                return;
+            }
+
+            webView.WebView.NavigationCompleted += WebView_NavigationCompleted;
+            _webViewNavigationHandlerAttached = true;
+        }
+
+        private void DetachWebViewNavigationHandler()
+        {
+            if (!_webViewNavigationHandlerAttached || webView?.WebView == null)
+            {
+                return;
+            }
+
+            webView.WebView.NavigationCompleted -= WebView_NavigationCompleted;
+            _webViewNavigationHandlerAttached = false;
+        }
+
         private void WebView_NavigationCompleted(object sender, CoreWebView2NavigationCompletedEventArgs e)
         {
             // 处理导航完成事件
             if (e.IsSuccess)
             {
-                Log.Information($"WebView navigation completed successfully to: {webView.WebView.Source}");
+                Log.Information($"WebView navigation completed successfully to: {webView?.WebView?.Source}");
             }
             else
             {

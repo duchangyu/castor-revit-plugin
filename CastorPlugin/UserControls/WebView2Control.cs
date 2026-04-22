@@ -35,7 +35,7 @@ namespace CastorPlugin.UserControls
                         }
 
                         // 调用已有的清理方法
-                        CleanupWebView2();
+                        CleanupWebView2(markDisposed: true);
                     }
                     catch (Exception ex)
                     {
@@ -61,4 +61,4 @@ namespace CastorPlugin.UserControls
             Dispose(false);
         }
     }
-} 
+}
