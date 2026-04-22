@@ -12,7 +12,7 @@
   WindowStartupLocation="CenterScreen"
   ResizeMode="NoResize"
   ShowInTaskbar="False"
-  Background="{DynamicResource ApplicationBackgroundBrush}"
+  Background="#F8FAFC"
   d:DataContext="{d:DesignInstance Type=vm:LoginViewModel}"
   mc:Ignorable="d">
 
@@ -26,10 +26,10 @@
     <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#4F46E5"/>
     <SolidColorBrush x:Key="SuccessBrush" Color="#10B981"/>
     <SolidColorBrush x:Key="ErrorBrush" Color="#EF4444"/>
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{DynamicResource TextFillColorPrimary}"/>
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{DynamicResource TextFillColorSecondary}"/>
-    <SolidColorBrush x:Key="InputBackgroundBrush" Color="{DynamicResource ControlFillColorDefault}"/>
-    <SolidColorBrush x:Key="InputBorderBrush" Color="{DynamicResource ControlStrokeColorDefault}"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1E293B"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B"/>
+    <SolidColorBrush x:Key="InputBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#E2E8F0"/>
     <SolidColorBrush x:Key="CardShadowBrush" Color="#000000"/>
 
     <!-- TextBox Style -->
@@ -82,8 +82,7 @@
                 <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
               </Trigger>
               <Trigger Property="IsEnabled" Value="False">
-                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlFillColorDisabledBrush}"/>
-                <Setter Property="Foreground" Value="{DynamicResource TextFillColorDisabledBrush}"/>
+                <Setter TargetName="border" Property="Background" Value="#CBD5E1"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -93,7 +92,7 @@
 
     <!-- Secondary Button Style -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-      <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}"/>
+      <Setter Property="Background" Value="#F1F5F9"/>
       <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
       <Setter Property="FontWeight" Value="Medium"/>
       <Setter Property="FontSize" Value="14"/>
@@ -110,7 +109,7 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="border" Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+                <Setter TargetName="border" Property="Background" Value="#E2E8F0"/>
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -120,7 +119,7 @@
   </Window.Resources>
 
   <Grid>
-    <Border Background="{DynamicResource ControlFillColorDefaultBrush}"
+    <Border Background="White"
             CornerRadius="16"
             Margin="24"
             Padding="32">
@@ -132,7 +131,7 @@
         <!-- Logo/Title Area -->
         <StackPanel HorizontalAlignment="Center" Margin="0,0,0,32">
           <!-- Icon -->
-          <Border Width="64" Height="64" CornerRadius="16" Background="#226366F1" Margin="0,0,0,16">
+          <Border Width="64" Height="64" CornerRadius="16" Background="#EEF2FF" Margin="0,0,0,16">
             <TextBlock Text="&#xE8D4;"
                        FontFamily="Segoe MDL2 Assets"
                        FontSize="28"
@@ -213,10 +212,10 @@
                      Height="4"
                      Margin="0,20,0,0"
                      Foreground="{StaticResource PrimaryBrush}"
-                     Background="{DynamicResource ControlFillColorDefaultBrush}"/>
+                     Background="#E2E8F0"/>
 
         <!-- Error message -->
-        <Border Background="#22EF4444"
+        <Border Background="#FEF2F2"
                 CornerRadius="8"
                 Padding="12,10"
                 Margin="0,16,0,0"
