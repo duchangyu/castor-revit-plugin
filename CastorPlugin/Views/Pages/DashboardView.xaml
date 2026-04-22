@@ -124,7 +124,7 @@
             <StackPanel Orientation="Horizontal"
                         Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVisConverter}}">
               <TextBlock Text="&#xE8FB;" Style="{StaticResource IconTextStyle}" Foreground="{StaticResource SuccessBrush}" Margin="0,0,8,0"/>
-              <TextBlock Text="{Binding UserPhone}"
+              <TextBlock Text="{Binding UserDisplayName}"
                          MaxWidth="140"
                          VerticalAlignment="Center"
                          FontSize="13"

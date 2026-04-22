@@ -67,7 +67,16 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
 
     public bool IsLoggedIn => _authService.IsLoggedIn;
 
-    public string UserPhone => _authService.CurrentUser?.Phone ?? "";
+    public string UserDisplayName
+    {
+        get
+        {
+            var user = _authService.CurrentUser;
+            return string.IsNullOrWhiteSpace(user?.DisplayName)
+                ? user?.Phone ?? ""
+                : user.DisplayName.Trim();
+        }
+    }
 
     public event Action AuthStateChanged;
 
@@ -76,7 +85,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IDashboardVie
         RunOnUiThread(() =>
         {
             OnPropertyChanged(nameof(IsLoggedIn));
-            OnPropertyChanged(nameof(UserPhone));
+            OnPropertyChanged(nameof(UserDisplayName));
             AuthStateChanged?.Invoke();
         });
     }
