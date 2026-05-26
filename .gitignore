@@ -3,6 +3,10 @@
 *.vs/
 *.vscode/
 
+#IDE specific
+.cursorrules
+.cursorignore
+
 #Project-specific folders
 *obj/
 *bin/
@@ -16,6 +20,12 @@
 
 #Project-specific files
 */build.schema.json
+
+#Local development artifacts
+docs/superpowers/
+tools/system-reserved/
+debug.log
+ServerSideApiDoc.md
 
 #User-specific files
 *.user
