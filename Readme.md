@@ -2,6 +2,18 @@
 
 Castor 是一个 Revit 插件，为 Revit 用户提供现代化的 WPF 界面体验。通过 WebView2 技术集成网页功能，支持族构件的提取、上传和"挖宝"功能，帮助用户将 Revit 族构件发布到 [BIMonChain](https://nft.bimonchain.com) 平台。
 
+## 截图
+
+### 主界面 - 挖宝大厅
+构件指纹扫描，提取族名称、类型、参数、尺寸等信息，生成唯一指纹并上传到 BIMonChain 平台。
+
+![挖宝大厅](screenshot-dig.png)
+
+### 区块链确权
+将 BIM 构件铸造成可确权的数字资产，搜索、确权、变现。
+
+![主界面](screenshot-main.png)
+
 ## 支持版本
 
 - Revit 2020
