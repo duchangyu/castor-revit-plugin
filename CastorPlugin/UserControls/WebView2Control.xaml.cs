@@ -176,8 +176,8 @@ namespace CastorPlugin.UserControls
                             throw new Core.Exceptions.WebView2RuntimeNotFoundException();
                         }
 
-                        // 设置 WebView2 用户数据文件夹
-                        string tempPath = Path.Combine(Path.GetTempPath(), "WebView2UserData", Guid.NewGuid().ToString());
+                        // 设置 WebView2 用户数据文件夹（使用固定路径以保持会话）
+                        string tempPath = Path.Combine(Path.GetTempPath(), "CastorPlugin", "WebView2UserData");
                         Directory.CreateDirectory(tempPath);
 
                         var env = await CoreWebView2Environment.CreateAsync(userDataFolder: tempPath);
