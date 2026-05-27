@@ -35,8 +35,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Build
-        run: ./build.cmd Compile --configuration "Release R24"
+      - name: Build all configurations
+        run: ./build.cmd Compile
+        shell: cmd
+
+      - name: Create installer
+        run: ./build.cmd CreateInstaller
         shell: cmd
 
       - name: Upload Artifacts
@@ -44,8 +48,9 @@ jobs:
         with:
           name: build-output
           path: |
-            bin/Release R24/
-          retention-days: 7
+            output/**/*
+            Installer/output/**/*
+          retention-days: 14
 
   release:
     needs: build
@@ -65,8 +70,12 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/**/*.msi
+            artifacts/**/*.zip
+            artifacts/**/*.bundle
           draft: true
           generate_release_notes: true
+          tag_name: v${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
