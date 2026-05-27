@@ -1,0 +1,155 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1779804689393,
+  "projectRoot": "/Volumes/[C] Windows 11 (1)/Users/danieldu/source/repos/castor",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "Build": {
+      "path": "Build",
+      "purpose": "Build output",
+      "fileCount": 11,
+      "lastAccessed": 1779804689106,
+      "keyFiles": [
+        "Build.Bundle.cs",
+        "Build.CI.GitHub.cs",
+        "Build.Clean.cs",
+        "Build.Compile.cs",
+        "Build.Configuration.cs"
+      ]
+    },
+    "CastorPlugin": {
+      "path": "CastorPlugin",
+      "purpose": null,
+      "fileCount": 11,
+      "lastAccessed": 1779804689120,
+      "keyFiles": [
+        "App.xaml",
+        "Application.cs",
+        "CastorPlugin.addin",
+        "CastorPlugin.csproj",
+        "CastorPlugin.csproj.user"
+      ]
+    },
+    "Installer": {
+      "path": "Installer",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1779804689138,
+      "keyFiles": [
+        "Installer.Generator.cs",
+        "Installer.cs",
+        "Installer.csproj"
+      ]
+    },
+    "RevitLookup.UI": {
+      "path": "RevitLookup.UI",
+      "purpose": null,
+      "fileCount": 25,
+      "lastAccessed": 1779804689161,
+      "keyFiles": [
+        "Application.cs",
+        "ContentDialogService.cs",
+        "ForkModificationList.md",
+        "IContentDialogService.cs",
+        "INavigationService.cs"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1779804689172,
+      "keyFiles": []
+    },
+    "output": {
+      "path": "output",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1779804689185,
+      "keyFiles": []
+    },
+    "screenshots": {
+      "path": "screenshots",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1779804689230,
+      "keyFiles": [
+        "ScreenShot_2026-05-26_172739_122.png",
+        "ScreenShot_2026-05-26_220640_155.png"
+      ]
+    },
+    "tools": {
+      "path": "tools",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1779804689242,
+      "keyFiles": []
+    },
+    "CastorPlugin/Config": {
+      "path": "CastorPlugin/Config",
+      "purpose": "Configuration files",
+      "fileCount": 3,
+      "lastAccessed": 1779804689263,
+      "keyFiles": [
+        "FoldersConfiguration.cs",
+        "LoggerConfigurator.cs",
+        "Settings.cfg"
+      ]
+    },
+    "Installer/bin": {
+      "path": "Installer/bin",
+      "purpose": "Executable scripts",
+      "fileCount": 0,
+      "lastAccessed": 1779804689348,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "Build/Build.csproj",
+      "accessCount": 3,
+      "lastAccessed": 1779877131457,
+      "type": "file"
+    },
+    {
+      "path": "Readme.md",
+      "accessCount": 2,
+      "lastAccessed": 1779804818775,
+      "type": "file"
+    },
+    {
+      "path": "global.json",
+      "accessCount": 2,
+      "lastAccessed": 1779876885658,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

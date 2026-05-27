@@ -5,10 +5,18 @@ on:
     branches:
       - main
       - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'LICENSE*'
   pull_request:
     branches:
       - main
       - master
+    types:
+      - opened
+      - synchronize
+      - closed
 
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -36,7 +44,7 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Build all configurations
-        run: ./build.cmd Compile CreateInstaller CreateBundle
+        run: .\.nuke\build.cmd Compile CreateInstaller CreateBundle
         shell: cmd
 
       - name: Upload Artifacts
