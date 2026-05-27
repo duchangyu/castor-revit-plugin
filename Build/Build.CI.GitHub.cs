@@ -11,7 +11,7 @@ sealed partial class Build
         .Requires(() => GitHubToken)
         .Requires(() => GitRepository)
         .Requires(() => GitVersion)
-        .OnlyWhenStatic(() => GitRepository.IsOnMainOrMasterBranch() && IsServerBuild)
+        .OnlyWhenStatic(() => IsLocalBuild)
         .Executes(async () =>
         {
             GitHubTasks.GitHubClient = new GitHubClient(new ProductHeaderValue(Solution.Name))
