@@ -10,7 +10,7 @@ sealed partial class Build
             foreach (var configuration in GlobBuildConfigurations())
                 DotNetClean(settings => settings
                         .SetConfiguration(configuration)
-                        .SetVerbosity(DotNetVerbosity.Minimal));
+                        .SetVerbosity(DotNetVerbosity.Quiet));
 
             foreach (var project in Solution.AllProjects.Where(project => project != Solution.Build))
                 CleanDirectory(project.Directory / "bin");
