@@ -11,8 +11,7 @@ sealed partial class Build
             foreach (var configuration in GlobBuildConfigurations())
                 DotNetBuild(settings => settings
                     .SetConfiguration(configuration)
-                    .SetVersion(Version)
-                    .SetVerbosity(DotNetVerbosity.Quiet));
+                    .SetVersion(Version));
         });
 
     List<string> GlobBuildConfigurations()
