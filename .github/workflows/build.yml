@@ -36,11 +36,7 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Build all configurations
-        run: ./build.cmd Compile
-        shell: cmd
-
-      - name: Create installer
-        run: ./build.cmd CreateInstaller
+        run: ./build.cmd Compile CreateInstaller CreateBundle
         shell: cmd
 
       - name: Upload Artifacts
